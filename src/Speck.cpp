@@ -444,14 +444,14 @@ struct SpeckDisplay : TransparentWidget {
 		if (module->inputs[Speck::INPUT_2].active) {
 			nvgStrokeColor(vg, nvgRGBA(0x0E, 0x99, 0x00, 0xA0));
 			//drawWaveform(vg, module->buffer2, gain2, pos2);
-			negOffs = drawWaveform(vg, module->FFT2, gain2, pos2, zoom, freqOffs, module->linLog);
+			negOffs = drawWaveform(vg, module->FFT2, gain2, pos2, module->linLog ? 1 : zoom, freqOffs, module->linLog);
 		}
 
 		// X
 		if (module->inputs[Speck::INPUT_1].active) {
 			nvgStrokeColor(vg, nvgRGBA(0xF4, 0x51, 0x00, 0xA0));
 			//drawWaveform(vg, module->buffer1, gain1, pos1);
-			negOffs = drawWaveform(vg, module->FFT1, gain1, pos1, zoom, freqOffs, module->linLog);
+			negOffs = drawWaveform(vg, module->FFT1, gain1, pos1, module->linLog ? 1 : zoom, freqOffs, module->linLog);
 		}
 		//drawTrig(vg, module->params[Speck::TRIG_PARAM], gain1, pos1);
 
@@ -463,7 +463,7 @@ struct SpeckDisplay : TransparentWidget {
 		}
 		drawStats(vg, Vec(0, 0), "IN1", &stats1);
 		drawStats(vg, Vec(0, box.size.y - 15), "IN2", &stats2);
-		drawGrid(vg, zoom, freqOffs, module->linLog, negOffs);
+		drawGrid(vg, module->linLog ? 1 : zoom, freqOffs, module->linLog, negOffs);
 	}
 };
 

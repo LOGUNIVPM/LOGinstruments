@@ -3,20 +3,20 @@
 
 struct constant : Module {
 	enum ParamIds {
-		VALUE_PARAM,
+		VALUE_PARAM_1,
+		VALUE_PARAM_10,
+		VALUE_PARAM_100,
 		NUM_PARAMS
 	};
 	enum InputIds {
-		VOID_INPUT,
 		NUM_INPUTS
 	};
 	enum OutputIds {
-		MAIN_OUTPUT,
+		OUT_1,
+		OUT_10,
+		OUT_100,
 		NUM_OUTPUTS
 	};
-
-	float lights[1] = {};
-
 
 	constant();
 	void step();
@@ -31,10 +31,13 @@ constant::constant() {
 void constant::step() {
 
 	// Set output
-	if (outputs[MAIN_OUTPUT].active)
-		outputs[MAIN_OUTPUT].value = 1.0 * params[VALUE_PARAM].value;
+	if (outputs[OUT_1].active)
+		outputs[OUT_1].value = params[VALUE_PARAM_1].value;
+	if (outputs[OUT_10].active)
+		outputs[OUT_10].value = params[VALUE_PARAM_10].value;
+	if (outputs[OUT_100].active)
+		outputs[OUT_100].value = params[VALUE_PARAM_100].value;
 
-	lights[0] = rescalef(params[VALUE_PARAM].value, -48.0, 48.0, -1.0, 1.0);
 }
 
 
@@ -46,7 +49,7 @@ constantWidget::constantWidget() {
 	{
 		SVGPanel *panel = new SVGPanel();
 		panel->box.size = box.size;
-		panel->setBackground(SVG::load(assetPlugin(plugin, "res/VCO.svg")));
+		panel->setBackground(SVG::load(assetPlugin(plugin, "res/const-nofonts.svg")));
 		addChild(panel);
 	}
 
@@ -55,12 +58,12 @@ constantWidget::constantWidget() {
 	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
 	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-	addParam(createParam<Davies1900hLargeBlackKnob>(Vec(48, 61), module, constant::VALUE_PARAM, -54.0, 54.0, 0.0));
+	addParam(createParam<Davies1900hLargeBlackKnob>(Vec(48, 60), module, constant::VALUE_PARAM_1, -1.0, 1.0, 0.0));
+	addParam(createParam<Davies1900hLargeBlackKnob>(Vec(48, 130), module, constant::VALUE_PARAM_10, -10.0, 10.0, 0.0));
+	addParam(createParam<Davies1900hLargeBlackKnob>(Vec(48, 200), module, constant::VALUE_PARAM_100, -100.0, 100.0, 0.0));
 
-	addInput(createInput<PJ301MPort>(Vec(11, 276), module, constant::VOID_INPUT));
-
-	addOutput(createOutput<PJ301MPort>(Vec(11, 320), module, constant::MAIN_OUTPUT));
-
-	addChild(createValueLight<SmallLight<GreenRedPolarityLight>>(Vec(99, 41), &module->lights[0]));
+	addOutput(createOutput<PJ301MPort>(Vec(110, 70), module, constant::OUT_1));
+	addOutput(createOutput<PJ301MPort>(Vec(110, 140), module, constant::OUT_10));
+	addOutput(createOutput<PJ301MPort>(Vec(110, 210), module, constant::OUT_100));
 }
 
