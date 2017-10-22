@@ -21,7 +21,7 @@ struct Brexit : Module {
 	Brexit();
 	void step();
 
-	void initialize() {
+	void reset() {
 	}
 };
 

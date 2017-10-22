@@ -94,7 +94,7 @@ struct Speck : Module {
 			linLog = json_integer_value(sumJ);
 	}
 
-	void initialize() {
+	void reset() {
 		linLog = false;
 		onOff = false;
 	}
@@ -155,7 +155,7 @@ void Speck::step() {
 	// Compute time
 	if (onOff) {
 		//float deltaTime = powf(2.0, -14.0); // this could be the NFFT in the future (if rounded to nearest 2^N)
-		//int frameCount = (int)ceilf(deltaTime * gSampleRate);
+		//int frameCount = (int)ceilf(deltaTime * engineGetSampleRate());
 		int frameCount = 1;
 
 		// Add frame to buffer
@@ -234,7 +234,7 @@ struct SpeckDisplay : TransparentWidget {
 			}
 #endif
 
-			peakx = gSampleRate/2.0 * ((float)(peakx) / (float)(FFT_POINTS_NYQ));
+			peakx = engineGetSampleRate()/2.0 * ((float)(peakx) / (float)(FFT_POINTS_NYQ));
 			f0 = peakx; // todo calculate the real f0
 		}
 	};
@@ -246,7 +246,7 @@ struct SpeckDisplay : TransparentWidget {
 
 	float drawWaveform(NVGcontext *vg, float *values, float gain, float offset, float fzoom, float foffs, bool linLog) {
 		int xpos;
-		float nyq = gSampleRate / 2.0;
+		float nyq = engineGetSampleRate() / 2.0;
 		float logMax = log10(nyq); // todo not compute always
 		float semilogx[FFT_POINTS_NYQ];
 		float negOffs;
@@ -309,7 +309,7 @@ struct SpeckDisplay : TransparentWidget {
 	void drawGrid(NVGcontext *vg, float fzoom, float foffs, bool linLog, float negOffs) {
 		Rect b = Rect(Vec(0, 15), box.size.minus(Vec(0, 15*2)));
 		nvgScissor(vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
-		float nyq = gSampleRate / 2.0;
+		float nyq = engineGetSampleRate() / 2.0;
 		float range = nyq / (fzoom < 1.0 ? 1.0 : fzoom);
 		float fstart = foffs * (nyq - range);
 		int first = ceil(fstart / 1000) * 1000;

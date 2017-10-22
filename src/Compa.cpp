@@ -25,7 +25,7 @@ struct Compa : Module {
 	Compa();
 	void step();
 
-	void initialize() {
+	void reset() {
 	}
 };
 

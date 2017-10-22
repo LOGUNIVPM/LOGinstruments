@@ -63,7 +63,7 @@ struct Britix : Module {
 	Britix();
 	void step();
 
-	void initialize() {
+	void reset() {
 	}
 };
 
