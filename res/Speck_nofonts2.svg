@@ -48,9 +48,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.4"
-     inkscape:cx="118.80047"
-     inkscape:cy="164.43083"
+     inkscape:zoom="5.6"
+     inkscape:cx="24.00468"
+     inkscape:cy="12.704492"
      inkscape:document-units="mm"
      inkscape:current-layer="g13452"
      showgrid="false"
@@ -75,7 +75,7 @@
      inkscape:object-nodes="true"
      inkscape:snap-center="false"
      inkscape:snap-text-baseline="true"
-     inkscape:snap-global="false">
+     inkscape:snap-global="true">
     <sodipodi:guide
        position="0,46.041641"
        orientation="0,1"
@@ -136,7 +136,7 @@
                  style="stroke-width:0.77570349">
                 <g
                    id="g6960"
-                   transform="matrix(0.79881156,0,0,0.79881156,-215.02314,-0.03670543)">
+                   transform="matrix(0.79881156,0,0,0.79881156,-216.11989,-0.0367049)">
                   <g
                      transform="translate(0.15,0.03590022)"
                      id="g4839">
