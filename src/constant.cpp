@@ -1,4 +1,4 @@
-#include "Leonardo.hpp"
+#include "LOGinstruments.hpp"
 
 
 struct constant : Module {
@@ -19,7 +19,7 @@ struct constant : Module {
 	};
 
 	constant();
-	void step();
+	void step() override;
 };
 
 constant::constant() {

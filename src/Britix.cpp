@@ -1,7 +1,7 @@
 #include <string.h>
 #include <math.h>
 #include <float.h>
-#include "Leonardo.hpp"
+#include "LOGinstruments.hpp"
 
 #define VERSION "1.0"
 
@@ -57,22 +57,33 @@ struct Britix : Module {
 		NUM_OUTPUTS_TOT = NUM_OUTPUTS_1 + NUM_OUTPUTS_2
 	};
 
+	enum LightIds {
+		LIGHTS1_1,
+		LIGHTS1_2,
+		LIGHTS1_3,
+		LIGHTS2_1,
+		LIGHTS2_2,
+		LIGHTS2_3,
+		NUM_LIGHTS,
+	};
+
 	float lights1[3] = {};
 	float lights2[3] = {};
 
-	Britix();
+	Britix() : Module(NUM_PARAMS_TOT, NUM_INPUTS_TOT, NUM_OUTPUTS_TOT, NUM_LIGHTS) {}
 	void step();
 
 	void reset() {
 	}
 };
 
-
+/*
 Britix::Britix() {
 	params.resize(NUM_PARAMS_TOT);
 	inputs.resize(NUM_INPUTS_TOT);
 	outputs.resize(NUM_OUTPUTS_TOT);
 }
+*/
 
 inline float op(float op1, float op2, char operation) {
 	if (operation == '+')
@@ -107,9 +118,9 @@ void Britix::step() {
 	// acquire inputs
 	for (int i = 0; i < NUM_INPUTS_1; i++) {
 		if (inputs[i].active) {
-			in1[i] = lights1[i] = (inputs[i].value);
+			in1[i] = lights[LIGHTS1_1+i].value = (inputs[i].value);
 		} else {
-			lights1[i] = 0.0;
+			lights[LIGHTS1_1+i].value = 0.0;
 		}
 	}
 
@@ -150,9 +161,9 @@ void Britix::step() {
 	// acquire inputs
 	for (int i = 0; i < NUM_INPUTS_2; i++) {
 		if (inputs[i+INPUT2_A].active) {
-			in2[i] = lights2[i] = (inputs[i+INPUT2_A].value);
+			in2[i] = lights[LIGHTS2_1+i].value = (inputs[i+INPUT2_A].value);
 		} else {
-			lights2[i] = 0.0;
+			lights[LIGHTS2_1+i].value = 0.0;
 		}
 	}
 
@@ -218,9 +229,9 @@ BritixWidget::BritixWidget() {
 	addOutput(createOutput<PJ3410Port>(Vec(230, 118), module, Britix::OUTPUT1_C));
 	addOutput(createOutput<PJ3410Port>(Vec(230, 148), module, Britix::OUTPUT1_SUM));
 
-	addChild(createValueLight<TinyLight<GreenValueLight>>(Vec(81, 167), &module->lights1[0]));
-	addChild(createValueLight<TinyLight<GreenValueLight>>(Vec(111, 167), &module->lights1[1]));
-	addChild(createValueLight<TinyLight<GreenValueLight>>(Vec(141, 167), &module->lights1[2]));
+	addChild(createLight<TinyLight<GreenLight>>(Vec(81, 167), module, Britix::LIGHTS1_1));
+	addChild(createLight<TinyLight<GreenLight>>(Vec(111, 167), module, Britix::LIGHTS1_2));
+	addChild(createLight<TinyLight<GreenLight>>(Vec(141, 167), module, Britix::LIGHTS1_3));
 
 	//BOTTOM
 #define BOTTOM_VDIST 175
@@ -243,7 +254,7 @@ BritixWidget::BritixWidget() {
 	addOutput(createOutput<PJ3410Port>(Vec(230, 118+BOTTOM_VDIST), module, Britix::OUTPUT2_C));
 	addOutput(createOutput<PJ3410Port>(Vec(230, 148+BOTTOM_VDIST), module, Britix::OUTPUT2_SUM));
 
-	addChild(createValueLight<TinyLight<GreenValueLight>>(Vec(81, 167+BOTTOM_VDIST), &module->lights2[0]));
-	addChild(createValueLight<TinyLight<GreenValueLight>>(Vec(111, 167+BOTTOM_VDIST), &module->lights2[1]));
-	addChild(createValueLight<TinyLight<GreenValueLight>>(Vec(141, 167+BOTTOM_VDIST), &module->lights2[2]));
+	addChild(createLight<TinyLight<GreenLight>>(Vec(81, 167+BOTTOM_VDIST), module, Britix::LIGHTS2_1));
+	addChild(createLight<TinyLight<GreenLight>>(Vec(111, 167+BOTTOM_VDIST), module, Britix::LIGHTS2_2));
+	addChild(createLight<TinyLight<GreenLight>>(Vec(141, 167+BOTTOM_VDIST), module, Britix::LIGHTS2_3));
 }

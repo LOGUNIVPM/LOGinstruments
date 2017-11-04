@@ -2,7 +2,7 @@
 #include <complex.h>
 #include <math.h>
 #include <float.h>
-#include "Leonardo.hpp"
+#include "LOGinstruments.hpp"
 #include "kiss_fft.h"
 #include "dsp/digital.hpp"
 
@@ -61,6 +61,12 @@ struct Speck : Module {
 		OUTPUT_2,
 		NUM_OUTPUTS
 	};
+	enum LightsIds {
+		LIGHTS_0_LIN,
+		LIGHTS_1_LOG,
+		LIGHTS_2_ON,
+		NUM_LIGHTS,
+	};
 
 	float buffer1[BUFFER_SIZE] = {};
 	float buffer2[BUFFER_SIZE] = {};
@@ -74,33 +80,37 @@ struct Speck : Module {
 	bool forceOff = false;
 	bool linLog = false; // lin = 0, log = 1
 	bool onOff = false;
-	float lights[3] = {}; /* 0: LIN, 1: LOG, 2: ON */
 	kiss_fft_cfg cfg_for_FFT, cfg_for_IFFT;
 	float HannW[BUFFER_SIZE];
 
-	Speck();
+	Speck() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {
+		cfg_for_FFT = kiss_fft_alloc( FFT_POINTS, DIR_FFT, 0, 0 );
+		cfg_for_IFFT = kiss_fft_alloc( FFT_POINTS, INV_FFT, 0, 0 );
+		//HannW = NULL;
+		HannWindow(&HannW[0], BUFFER_SIZE);
+	}
 	~Speck();
-	void step();
+	void step() override;
 
-	json_t *toJson() {
+	json_t *toJson() override {
 		json_t *rootJ = json_object();
 		json_object_set_new(rootJ, "linLog", json_integer((int) linLog));
 		return rootJ;
 	}
 
-	void fromJson(json_t *rootJ) {
+	void fromJson(json_t *rootJ) override {
 		json_t *sumJ = json_object_get(rootJ, "linLog");
 		if (sumJ)
 			linLog = json_integer_value(sumJ);
 	}
 
-	void reset() {
+	void reset() override {
 		linLog = false;
 		onOff = false;
 	}
 };
 
-
+/*
 Speck::Speck() {
 	params.resize(NUM_PARAMS);
 	inputs.resize(NUM_INPUTS);
@@ -111,6 +121,7 @@ Speck::Speck() {
 	//HannW = NULL;
 	HannWindow(&HannW[0], BUFFER_SIZE);
 }
+*/
 
 Speck::~Speck() {
 	free(cfg_for_FFT);
@@ -135,13 +146,13 @@ void Speck::step() {
     	onOff = false;
     	forceOff = false;
     }
-    lights[2] = onOff;
+    lights[LIGHTS_2_ON].value = onOff;
 
     if (linLogTrig.process(params[LINLOG_PARAM].value)) {
             linLog = !linLog;
     }
-    lights[0] = linLog ? 0.0 : 1.0;
-    lights[1] = linLog ? 1.0 : 0.0;
+    lights[LIGHTS_0_LIN].value = linLog ? 0.0 : 1.0;
+    lights[LIGHTS_1_LOG].value = linLog ? 1.0 : 0.0;
 
     // copy in to out
     if (outputs[OUTPUT_1].active) {
@@ -244,12 +255,15 @@ struct SpeckDisplay : TransparentWidget {
 		font = Font::load(assetPlugin(plugin, "res/DejaVuSansMono.ttf"));
 	}
 
+	#define LOG_LOWER_FREQ 10.0 // lowest freq we are going to show in log mode
 	float drawWaveform(NVGcontext *vg, float *values, float gain, float offset, float fzoom, float foffs, bool linLog) {
 		int xpos;
 		float nyq = engineGetSampleRate() / 2.0;
-		float logMax = log10(nyq); // todo not compute always
+		float logMax = log10(nyq);
 		float semilogx[FFT_POINTS_NYQ];
+		float vgrid[100];
 		float negOffs;
+		int maxj = 0;
 		Vec p;
 		nvgSave(vg);
 		Rect b = Rect(Vec(0, 15), box.size.minus(Vec(0, 15*2)));
@@ -257,28 +271,58 @@ struct SpeckDisplay : TransparentWidget {
 		nvgBeginPath(vg);
 		// Draw maximum display left to right
 		int zoomPoints = floor((float)(FFT_POINTS_NYQ) / (fzoom < 1.0 ? 1.0 : fzoom));
+		int lwp = 0; // lowest point to show
+		int spacing = (nyq/FFT_POINTS_NYQ);
+		for (lwp = 0; lwp < FFT_POINTS_NYQ; lwp++) {
+			if (lwp*spacing > LOG_LOWER_FREQ) break;
+		}
+
 		// create the semilogx axis
 		if (linLog) {
-			for (int i = 0; i < FFT_POINTS_NYQ; i++) {
-				semilogx[i] = log10((float)(i) * nyq / (float)zoomPoints +1.0 );
-				semilogx[i] = (fzoom * semilogx[i] / logMax * b.size.x); // apply the range of the box
+			vgrid[0] = log10(LOG_LOWER_FREQ);
+			vgrid[0] = (fzoom * vgrid[0] * b.size.x / logMax);
+			int j = 1;
+			// create lin grid values
+			for (int f = 100; f < 1000; f+=100) {
+				vgrid[j++] = f;
 			}
-			float residual = semilogx[FFT_POINTS_NYQ-1] - semilogx[FFT_POINTS_NYQ-1]/fzoom; // excluded from plot
-			negOffs = - (foffs / FOFFS_RANGE) * residual;
-			for (int i = 0; i < FFT_POINTS_NYQ; i++) {
-				semilogx[i] = negOffs + semilogx[i]; // apply the range of the box
+			for (int f = 1000; f < nyq; f+=1000) {
+				vgrid[j++] = f;
+			}
+			maxj = j;
+			for (int i = 0; i < maxj; i++) {
+				vgrid[i] = log10((float)(vgrid[i]));
+				vgrid[i] = (fzoom * vgrid[i] * (b.size.x + vgrid[0]) / logMax);
 			}
 
+			semilogx[lwp] = log10((float)(lwp) * nyq / (float)zoomPoints );
+			semilogx[lwp] = (fzoom * semilogx[lwp] * b.size.x / logMax); // apply the range of the box
+			for (int i = lwp+1; i < FFT_POINTS_NYQ; i++) {
+				semilogx[i] = log10((float)(i) * nyq / (float)zoomPoints );
+				semilogx[i] = (fzoom * semilogx[i] * (b.size.x + semilogx[lwp])/ logMax); // apply the range of the box
+			}
+
+			float residual = semilogx[FFT_POINTS_NYQ-1] - (semilogx[FFT_POINTS_NYQ-1]/fzoom); // excluded from plot
+			negOffs = - (foffs / FOFFS_RANGE) * residual;
+/*
 			for (int i = 0; i < FFT_POINTS_NYQ; i++) {
+				semilogx[i] = negOffs + semilogx[i]; // apply the range of the box TODO togliere?
+			}
+			for (int j = 0; j < maxj; j++) {
+				vgrid[j] += negOffs;
+			}
+*/
+			for (int i = lwp; i < FFT_POINTS_NYQ; i++) {
 				float value = values[i] * gain + offset;
 
-				p = Vec(b.pos.x + ((semilogx[i])) , b.pos.y + b.size.y * (1-value)/2);
+				p = Vec(b.pos.x + ((semilogx[i])-semilogx[lwp]) + negOffs , b.pos.y + b.size.y * (1-value)/2);
 
-				if (i <= 0)
+				if (i <= lwp)
 					nvgMoveTo(vg, p.x, p.y);
 				else
 					nvgLineTo(vg, p.x, p.y);
 			}
+
 		} else {
 			int fstart = floor(foffs * ((float)(FFT_POINTS_NYQ) - (float)(zoomPoints)));
 
@@ -301,6 +345,24 @@ struct SpeckDisplay : TransparentWidget {
 		nvgStroke(vg);
 		nvgResetScissor(vg);
 		nvgRestore(vg);
+
+		if (linLog) {
+
+			// UP TO 1k
+			for (int j = 0; j < maxj; j++) {
+
+				Vec p = Vec(b.pos.x + vgrid[j] - vgrid[0]+ negOffs, box.size.y);
+				nvgStrokeColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0x10));
+				{
+					nvgBeginPath(vg);
+					nvgMoveTo(vg, p.x, p.y);
+					nvgLineTo(vg, p.x, 0);
+					nvgClosePath(vg);
+				}
+				nvgStroke(vg);
+			}
+		}
+
 		return negOffs;
 	}
 
@@ -329,40 +391,7 @@ struct SpeckDisplay : TransparentWidget {
 				}
 				nvgStroke(vg);
 			}
-		} else {
-			negOffs = - foffs/FOFFS_RANGE * (box.size.x - (box.size.x * fzoom));
-			// UP TO 1k
-			for (int f = 100; f < 1000; f+=100) {
-
-				float v = log10((f)) / log10(nyq/*first+range*/) * box.size.x * fzoom;
-				//printf("v %f\n", v);
-				Vec p = Vec(-negOffs + v, box.size.y);
-				nvgStrokeColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0x10));
-				{
-					nvgBeginPath(vg);
-					nvgMoveTo(vg, p.x, p.y);
-					nvgLineTo(vg, p.x, 0);
-					nvgClosePath(vg);
-				}
-				nvgStroke(vg);
-			}
-
-			// OVER 1k
-			for (int f = 1000; f < nyq; f+=1000) {
-
-				float v = log10((f)) / log10(nyq/*first+range*/) * box.size.x * fzoom;
-				//printf("v %f\n", v);
-				Vec p = Vec(-negOffs + v, box.size.y);
-				nvgStrokeColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0x10));
-				{
-					nvgBeginPath(vg);
-					nvgMoveTo(vg, p.x, p.y);
-					nvgLineTo(vg, p.x, 0);
-					nvgClosePath(vg);
-				}
-				nvgStroke(vg);
-			}
-		}
+		} else { ; } // is done in the drawWaveform for convenience
 
 		// HORZ LINES
 		for (int h = 0; h < box.size.y; h+= HORZ_GRID_DIST) {
@@ -430,7 +459,7 @@ struct SpeckDisplay : TransparentWidget {
 		nvgText(vg, pos.x + 17, pos.y + 10, text, NULL);
 	}
 
-	void draw(NVGcontext *vg) {
+	void draw(NVGcontext *vg) override {
 		float gain1 = powf(2.0, roundf(module->params[Speck::SCALE_1_PARAM].value)) / 12.0;
 		float gain2 = powf(2.0, roundf(module->params[Speck::SCALE_2_PARAM].value)) / 12.0;
 		float pos1 = module->params[Speck::POS_1_PARAM].value;
@@ -444,14 +473,14 @@ struct SpeckDisplay : TransparentWidget {
 		if (module->inputs[Speck::INPUT_2].active) {
 			nvgStrokeColor(vg, nvgRGBA(0x0E, 0x99, 0x00, 0xA0));
 			//drawWaveform(vg, module->buffer2, gain2, pos2);
-			negOffs = drawWaveform(vg, module->FFT2, gain2, pos2, module->linLog ? 1 : zoom, freqOffs, module->linLog);
+			negOffs = drawWaveform(vg, module->FFT2, gain2, pos2, zoom, freqOffs, module->linLog);
 		}
 
 		// X
 		if (module->inputs[Speck::INPUT_1].active) {
 			nvgStrokeColor(vg, nvgRGBA(0xF4, 0x51, 0x00, 0xA0));
 			//drawWaveform(vg, module->buffer1, gain1, pos1);
-			negOffs = drawWaveform(vg, module->FFT1, gain1, pos1, module->linLog ? 1 : zoom, freqOffs, module->linLog);
+			negOffs = drawWaveform(vg, module->FFT1, gain1, pos1, zoom, freqOffs, module->linLog);
 		}
 		//drawTrig(vg, module->params[Speck::TRIG_PARAM], gain1, pos1);
 
@@ -463,7 +492,7 @@ struct SpeckDisplay : TransparentWidget {
 		}
 		drawStats(vg, Vec(0, 0), "IN1", &stats1);
 		drawStats(vg, Vec(0, box.size.y - 15), "IN2", &stats2);
-		drawGrid(vg, module->linLog ? 1 : zoom, freqOffs, module->linLog, negOffs);
+		drawGrid(vg, zoom, freqOffs, module->linLog, negOffs);
 	}
 };
 
@@ -493,13 +522,13 @@ SpeckWidget::SpeckWidget() {
 		addChild(display);
 	}
 
-	addParam(createParam<Davies1900hSmallBlackSnapKnob>(Vec(118, 244), module, Speck::SCALE_1_PARAM, -10.0, 20.0, -1.0));
-	addParam(createParam<Davies1900hSmallBlackKnob>(Vec(118, 297), module, Speck::POS_1_PARAM, -1.0, 1.0, 0.0));
-	addParam(createParam<Davies1900hSmallBlackSnapKnob>(Vec(167, 244), module, Speck::SCALE_2_PARAM, -10.0, 20.0, -1.0));
-	addParam(createParam<Davies1900hSmallBlackKnob>(Vec(167, 297), module, Speck::POS_2_PARAM, -1.0, 1.0, 0.0));
-	addParam(createParam<Davies1900hSmallBlackKnob>(Vec(213, 244), module, Speck::ZOOM_PARAM, 1.0, ZOOM_RANGE, 1.0));
+	addParam(createParam<RoundSmallBlackSnapKnob>(Vec(118, 244), module, Speck::SCALE_1_PARAM, -10.0, 20.0, -1.0));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(118, 297), module, Speck::POS_1_PARAM, -1.0, 1.0, 0.0));
+	addParam(createParam<RoundSmallBlackSnapKnob>(Vec(167, 244), module, Speck::SCALE_2_PARAM, -10.0, 20.0, -1.0));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(167, 297), module, Speck::POS_2_PARAM, -1.0, 1.0, 0.0));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(213, 244), module, Speck::ZOOM_PARAM, 1.0, ZOOM_RANGE, 1.0));
 	addParam(createParam<CKD6>(Vec(258, 244), module, Speck::LINLOG_PARAM, 0.0, 1.0, 0.0));
-	addParam(createParam<Davies1900hSmallBlackKnob>(Vec(213, 297), module, Speck::FOFFS_PARAM, 0.0, FOFFS_RANGE, 0.0));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(213, 297), module, Speck::FOFFS_PARAM, 0.0, FOFFS_RANGE, 0.0));
 	addParam(createParam<CKD6>(Vec(239, 12), module, Speck::ONOFF_PARAM, 0.0, 1.0, 0.0));
 
 	addInput(createInput<PJ301MPort>(Vec(12, 240), module, Speck::INPUT_1));
@@ -508,8 +537,8 @@ SpeckWidget::SpeckWidget() {
 	addOutput(createOutput<PJ3410Port>(Vec(9, 306), module, Speck::OUTPUT_1));
 	addOutput(createOutput<PJ3410Port>(Vec(56, 306), module, Speck::OUTPUT_2));
 
-	addChild(createValueLight<TinyLight<GreenValueLight>>(Vec(286, 230), &module->lights[0]));
-	addChild(createValueLight<TinyLight<GreenValueLight>>(Vec(286, 280), &module->lights[1]));
-	addChild(createValueLight<TinyLight<GreenValueLight>>(Vec(265, 8), &module->lights[2]));
+	addChild(createLight<TinyLight<GreenLight>>(Vec(286, 230), module, Speck::LIGHTS_0_LIN));
+	addChild(createLight<TinyLight<GreenLight>>(Vec(286, 280), module, Speck::LIGHTS_1_LOG));
+	addChild(createLight<TinyLight<GreenLight>>(Vec(265, 8), module, Speck::LIGHTS_2_ON));
 
 }

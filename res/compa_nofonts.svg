@@ -35,9 +35,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.8189476"
-     inkscape:cx="193.68421"
-     inkscape:cy="79.675263"
+     inkscape:zoom="1.2861902"
+     inkscape:cx="50.302882"
+     inkscape:cy="155.2718"
      inkscape:document-units="mm"
      inkscape:current-layer="g13383"
      showgrid="false"
@@ -62,7 +62,7 @@
      inkscape:object-nodes="true"
      inkscape:snap-center="false"
      inkscape:snap-text-baseline="true"
-     inkscape:snap-global="true">
+     inkscape:snap-global="false">
     <sodipodi:guide
        position="0,46.041641"
        orientation="0,1"
@@ -108,7 +108,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>

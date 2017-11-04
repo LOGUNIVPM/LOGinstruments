@@ -1,7 +1,7 @@
 #include <string.h>
 #include <math.h>
 #include <float.h>
-#include "Leonardo.hpp"
+#include "LOGinstruments.hpp"
 
 struct Brexit : Module {
 	enum ParamIds {
@@ -19,9 +19,10 @@ struct Brexit : Module {
 	};
 
 	Brexit();
-	void step();
+	void step() override;
 
-	void reset() {
+	void reset() override {
+		;
 	}
 };
 
