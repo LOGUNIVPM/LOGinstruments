@@ -20,28 +20,34 @@ struct Compa : Module {
 		NUM_OUTPUTS,
 	};
 
-	float lights[NUM_OUTPUTS] = {};
+	enum LightsIds {
+		LIGHT_1,
+		LIGHT_2,
+		NUM_LIGHTS,
+	};
 
-	Compa();
-	void step();
+	Compa() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
 
-	void reset() {
+	void step() override;
+
+	void reset() override {
+		;
 	}
 };
 
-
+/*
 Compa::Compa() {
 	params.resize(NUM_PARAMS);
 	inputs.resize(NUM_INPUTS);
 	outputs.resize(NUM_OUTPUTS);
 }
-
+*/
 
 void Compa::step() {
 
 	for (int o = 0; o < NUM_OUTPUTS; o++) {
 		if (inputs[o*2].active && inputs[o*2+1].active) {
-			outputs[o].value = lights[o] = inputs[o*2].value >= inputs[o*2+1].value ? 1.0 : 0.0;
+			outputs[o].value = lights[o].value = inputs[o*2].value >= inputs[o*2+1].value ? 1.0 : 0.0;
 		}
 	}
 }
@@ -69,8 +75,8 @@ CompaWidget::CompaWidget() {
 	addOutput(createOutput<PJ3410Port>(Vec(46, 118), module, Compa::OUTPUT1));
 	addOutput(createOutput<PJ3410Port>(Vec(46, 118+BOTTOM_VDIST), module, Compa::OUTPUT2));
 
-	addChild(createValueLight<TinyLight<GreenValueLight>>(Vec(35, 130), &module->lights[0]));
-	addChild(createValueLight<TinyLight<GreenValueLight>>(Vec(35, 130+BOTTOM_VDIST), &module->lights[1]));
+	addChild(createLight<TinyLight<GreenLight>>(Vec(35, 130), module, Compa::LIGHT_1));
+	addChild(createLight<TinyLight<GreenLight>>(Vec(35, 130+BOTTOM_VDIST), module, Compa::LIGHT_2));
 
 
 }

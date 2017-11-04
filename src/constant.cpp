@@ -19,7 +19,7 @@ struct constant : Module {
 	};
 
 	constant();
-	void step();
+	void step() override;
 };
 
 constant::constant() {

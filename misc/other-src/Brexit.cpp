@@ -19,9 +19,10 @@ struct Brexit : Module {
 	};
 
 	Brexit();
-	void step();
+	void step() override;
 
-	void reset() {
+	void reset() override {
+		;
 	}
 };
 
