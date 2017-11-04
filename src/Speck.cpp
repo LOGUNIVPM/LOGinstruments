@@ -270,7 +270,6 @@ struct SpeckDisplay : TransparentWidget {
 		nvgScissor(vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
 		nvgBeginPath(vg);
 		// Draw maximum display left to right
-		int zoomPoints = floor((float)(FFT_POINTS_NYQ) / (fzoom < 1.0 ? 1.0 : fzoom));
 		int lwp = 0; // lowest point to show
 		int spacing = (nyq/FFT_POINTS_NYQ);
 		for (lwp = 0; lwp < FFT_POINTS_NYQ; lwp++) {
@@ -280,7 +279,7 @@ struct SpeckDisplay : TransparentWidget {
 		// create the semilogx axis
 		if (linLog) {
 			vgrid[0] = log10(LOG_LOWER_FREQ);
-			vgrid[0] = (fzoom * vgrid[0] * b.size.x / logMax);
+			vgrid[0] = (vgrid[0] * b.size.x / logMax);
 			int j = 1;
 			// create lin grid values
 			for (int f = 100; f < 1000; f+=100) {
@@ -292,14 +291,14 @@ struct SpeckDisplay : TransparentWidget {
 			maxj = j;
 			for (int i = 0; i < maxj; i++) {
 				vgrid[i] = log10((float)(vgrid[i]));
-				vgrid[i] = (fzoom * vgrid[i] * (b.size.x + vgrid[0]) / logMax);
+				vgrid[i] = (vgrid[i] * ((float)(b.size.x) + vgrid[0]) / logMax);
 			}
 
-			semilogx[lwp] = log10((float)(lwp) * nyq / (float)zoomPoints );
-			semilogx[lwp] = (fzoom * semilogx[lwp] * b.size.x / logMax); // apply the range of the box
+			semilogx[lwp] = log10((float)(lwp) * nyq / (float)FFT_POINTS_NYQ );
+			semilogx[lwp] = (semilogx[lwp] * b.size.x / logMax); // apply the range of the box
 			for (int i = lwp+1; i < FFT_POINTS_NYQ; i++) {
-				semilogx[i] = log10((float)(i) * nyq / (float)zoomPoints );
-				semilogx[i] = (fzoom * semilogx[i] * (b.size.x + semilogx[lwp])/ logMax); // apply the range of the box
+				semilogx[i] = log10((float)(i) * nyq / (float)FFT_POINTS_NYQ );
+				semilogx[i] = (b.size.x + semilogx[lwp] + 60) * semilogx[i] / logMax ; // apply the range of the box
 			}
 
 			float residual = semilogx[FFT_POINTS_NYQ-1] - (semilogx[FFT_POINTS_NYQ-1]/fzoom); // excluded from plot
@@ -315,7 +314,7 @@ struct SpeckDisplay : TransparentWidget {
 			for (int i = lwp; i < FFT_POINTS_NYQ; i++) {
 				float value = values[i] * gain + offset;
 
-				p = Vec(b.pos.x + ((semilogx[i])-semilogx[lwp]) + negOffs , b.pos.y + b.size.y * (1-value)/2);
+				p = Vec(b.pos.x + fzoom*(((semilogx[i])-semilogx[lwp]) + negOffs), b.pos.y + b.size.y * (1-value)/2);
 
 				if (i <= lwp)
 					nvgMoveTo(vg, p.x, p.y);
@@ -324,6 +323,7 @@ struct SpeckDisplay : TransparentWidget {
 			}
 
 		} else {
+			int zoomPoints = floor((float)(FFT_POINTS_NYQ) / (fzoom < 1.0 ? 1.0 : fzoom));
 			int fstart = floor(foffs * ((float)(FFT_POINTS_NYQ) - (float)(zoomPoints)));
 
 			for (int i = 0; i < zoomPoints; i++) {
@@ -351,7 +351,7 @@ struct SpeckDisplay : TransparentWidget {
 			// UP TO 1k
 			for (int j = 0; j < maxj; j++) {
 
-				Vec p = Vec(b.pos.x + vgrid[j] - vgrid[0]+ negOffs, box.size.y);
+				Vec p = Vec(b.pos.x + fzoom*(vgrid[j] - vgrid[0]+ negOffs), box.size.y);
 				nvgStrokeColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0x10));
 				{
 					nvgBeginPath(vg);
