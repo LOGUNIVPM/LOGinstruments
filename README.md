@@ -2,6 +2,7 @@
 LOGinstruments: VCV Rack plugins by Leonardo Gabrielli <l.gabrielli@univpm.it>
 
 ![family portrait](/res/family-portrait.png?raw=true "LOGinstruments modules")
+![Velvet](/res/Velvet.png?raw=true "LOGinstruments Velvet")
 
 # LessMess
 Tidy up your patching mess with LessMess by assigning labels to your patch cords. Just click on the label and type your text. Connect cables to the left (input) sockets and get the signal out from the right socket. It does not affect the signal whatsoever.
@@ -27,3 +28,10 @@ This plugin is meant for visualizing the Discrete Fourier Transform of a signal.
 
 # Constant
 Provide a DC offset for math purposes. Each knob has a different range.
+
+# Velvet
+Velvet noise generator. Inspired by the works from Välimäki et al. (See e.g. http://ieeexplore.ieee.org/abstract/document/6490018/).
+Basically velvet noise consists of sparse pulses with amplitude +/-1. When the pulse density gets large it sounds close to white gaussian noise.
+Two modes are available: a constant amplitude (+/-10V) and a density-dependent mode, which weights the peaks amplitude with the inverse of the density (see figure above, where a sweep of the density parameter is done)
+
+![Velvet Modes](/res/Velvet_w_scope.png?raw=true "LOGinstruments Velvet")
