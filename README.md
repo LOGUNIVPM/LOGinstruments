@@ -2,10 +2,9 @@
 LOGinstruments: VCV Rack plugins by Leonardo Gabrielli <l.gabrielli@univpm.it>
 
 ![family portrait](/res/family-portrait.png?raw=true "LOGinstruments modules")
-![black sheep](/res/black-sheep.png?raw=true "black sheep")
 
-# Constant
-Provide a DC offset for math purposes 
+# LessMess
+Tidy up your patching mess with LessMess by assigning labels to your patch cords. Just click on the label and type your text. Connect cables to the left (input) sockets and get the signal out from the right socket. It does not affect the signal whatsoever.
 
 # Compà
 Comparator module (2x)
@@ -26,5 +25,5 @@ Easy peasy.
 # Speck
 This plugin is meant for visualizing the Discrete Fourier Transform of a signal. The processing is based on KissFFT source code and employs a Hann window over 2k points. There are two independent channels available and the graph can be plotted on a linear frequency scale or a logarithmic frequency scale, with zoom and adaptive grid. All data is in dB.
 
-# Brexit
-Satirical module. Push the button for instant gratification and say goodbye to Winston.
+# Constant
+Provide a DC offset for math purposes. Each knob has a different range.
