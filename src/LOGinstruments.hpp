@@ -22,12 +22,28 @@ struct BritixWidget : ModuleWidget {
 	BritixWidget();
 };
 
+
 struct BrexitWidget : ModuleWidget {
 	BrexitWidget();
 };
 
 struct CompaWidget : ModuleWidget {
 	CompaWidget();
+};
+
+struct LessMessWidget : ModuleWidget {
+	TextField ** label;
+	LessMessWidget();
+};
+
+/*
+struct DPWOscWidget : ModuleWidget {
+	DPWOscWidget();
+};
+*/
+
+struct VelvetWidget : ModuleWidget {
+	VelvetWidget();
 };
 
 ////////////////////
