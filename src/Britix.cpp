@@ -204,11 +204,6 @@ BritixWidget::BritixWidget() {
 		addChild(panel);
 	}
 
-	addChild(createScrew<ScrewSilver>(Vec(15, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
-
 	// TOP
 	addParam(createParam<VCSPin4State>(Vec(68,56), module, Britix::MAT1_A_A_PIN, 0.0, 3.0, 0.0));
 	addParam(createParam<VCSPin4State>(Vec(98,56), module, Britix::MAT1_A_B_PIN, 0.0, 3.0, 0.0));

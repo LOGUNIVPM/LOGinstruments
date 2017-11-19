@@ -36,11 +36,6 @@ struct LessMessWidget : ModuleWidget {
 	LessMessWidget();
 };
 
-/*
-struct DPWOscWidget : ModuleWidget {
-	DPWOscWidget();
-};
-*/
 
 struct VelvetWidget : ModuleWidget {
 	VelvetWidget();
