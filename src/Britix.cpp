@@ -1,7 +1,7 @@
 #include <string.h>
 #include <math.h>
 #include <float.h>
-#include "Leonardo.hpp"
+#include "LOGinstruments.hpp"
 
 #define VERSION "1.0"
 
@@ -192,11 +192,6 @@ BritixWidget::BritixWidget() {
 		panel->setBackground(SVG::load(assetPlugin(plugin, "res/Britix_nofonts.svg")));
 		addChild(panel);
 	}
-
-	addChild(createScrew<ScrewSilver>(Vec(15, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
 
 	// TOP
 	addParam(createParam<VCSPin4State>(Vec(68,56), module, Britix::MAT1_A_A_PIN, 0.0, 3.0, 0.0));

@@ -1,4 +1,4 @@
-#include "Leonardo.hpp"
+#include "LOGinstruments.hpp"
 
 
 struct constant : Module {
@@ -52,11 +52,6 @@ constantWidget::constantWidget() {
 		panel->setBackground(SVG::load(assetPlugin(plugin, "res/const-nofonts.svg")));
 		addChild(panel);
 	}
-
-	addChild(createScrew<ScrewSilver>(Vec(15, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
 
 	addParam(createParam<Davies1900hLargeBlackKnob>(Vec(48, 60), module, constant::VALUE_PARAM_1, -1.0, 1.0, 0.0));
 	addParam(createParam<Davies1900hLargeBlackKnob>(Vec(48, 130), module, constant::VALUE_PARAM_10, -10.0, 10.0, 0.0));

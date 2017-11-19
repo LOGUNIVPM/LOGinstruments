@@ -1,7 +1,7 @@
 #include <string.h>
 #include <math.h>
 #include <float.h>
-#include "Leonardo.hpp"
+#include "LOGinstruments.hpp"
 
 struct Compa : Module {
 	enum ParamIds {
@@ -60,11 +60,6 @@ CompaWidget::CompaWidget() {
 		panel->setBackground(SVG::load(assetPlugin(plugin, "res/compa_nofonts.svg")));
 		addChild(panel);
 	}
-
-	addChild(createScrew<ScrewSilver>(Vec(15, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
 
 	addInput(createInput<PJ301MPort>(Vec(50, 58), module, Compa::INPUTA1));
 	addInput(createInput<PJ301MPort>(Vec(50, 88), module, Compa::INPUTB1));
