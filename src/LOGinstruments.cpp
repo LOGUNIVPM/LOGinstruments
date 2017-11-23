@@ -10,10 +10,10 @@ void init(rack::Plugin *p) {
 	p->version = TOSTRING(LOGINSTRUVERSION);
 #endif
 
-	p->addModel(createModel<constantWidget>("LOGinstruments", "LOGinstruments", "Constant", "Constant"));
-	p->addModel(createModel<SpeckWidget>("LOGinstruments", "LOGinstruments", "Speck", "Speck"));
-	p->addModel(createModel<BritixWidget>("LOGinstruments", "LOGinstruments", "Britix", "Britix"));
-	p->addModel(createModel<CompaWidget>("LOGinstruments", "LOGinstruments", "Compa", "Compa"));
-	p->addModel(createModel<LessMessWidget>("LOGinstruments", "LOGinstruments", "LessMess", "LessMess"));
-	p->addModel(createModel<VelvetWidget>("LOGinstruments", "LOGinstruments", "Velvet", "Velvet"));
+	p->addModel(createModel<constantWidget>("LOGinstruments", "Constant", "DC Offset Gen", UTILITY_TAG));
+	p->addModel(createModel<SpeckWidget>("LOGinstruments", "Speck", "Spectrum Analyzer", VISUAL_TAG, UTILITY_TAG));
+	p->addModel(createModel<BritixWidget>("LOGinstruments", "Britix", "Matrix Modulator", LOGIC_TAG, MIXER_TAG, UTILITY_TAG));
+	p->addModel(createModel<CompaWidget>("LOGinstruments", "Compa", "Comparator", DIGITAL_TAG, QUANTIZER_TAG));
+	p->addModel(createModel<LessMessWidget>("LOGinstruments", "LessMess", "Tidy Up Cables", UTILITY_TAG, VISUAL_TAG));
+	p->addModel(createModel<VelvetWidget>("LOGinstruments", "Velvet", "Velvet Noise Gen", NOISE_TAG, RANDOM_TAG));
 }
