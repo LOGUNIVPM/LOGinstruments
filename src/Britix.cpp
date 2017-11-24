@@ -71,19 +71,11 @@ struct Britix : Module {
 	float lights2[3] = {};
 
 	Britix() : Module(NUM_PARAMS_TOT, NUM_INPUTS_TOT, NUM_OUTPUTS_TOT, NUM_LIGHTS) {}
-	void step();
+	void step() override ;
 
-	void reset() {
+	void reset() override {
 	}
 };
-
-/*
-Britix::Britix() {
-	params.resize(NUM_PARAMS_TOT);
-	inputs.resize(NUM_INPUTS_TOT);
-	outputs.resize(NUM_OUTPUTS_TOT);
-}
-*/
 
 inline float op(float op1, float op2, char operation) {
 	if (operation == '+')

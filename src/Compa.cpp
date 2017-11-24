@@ -35,14 +35,6 @@ struct Compa : Module {
 	}
 };
 
-/*
-Compa::Compa() {
-	params.resize(NUM_PARAMS);
-	inputs.resize(NUM_INPUTS);
-	outputs.resize(NUM_OUTPUTS);
-}
-*/
-
 void Compa::step() {
 
 	for (int o = 0; o < NUM_OUTPUTS; o++) {

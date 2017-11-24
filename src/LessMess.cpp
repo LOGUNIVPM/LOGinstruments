@@ -32,7 +32,7 @@ struct LessMess : Module {
 		NUM_OUTPUTS,
 	};
 
-	LessMess(LessMessWidget * p);
+	LessMess() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, 0) {}
 	void step() override;
 
 	LessMessWidget * parent;
@@ -58,19 +58,10 @@ struct LessMess : Module {
 		}
 	}
 
-	void reset() {
+	void reset() override {
 		;
 	}
 };
-
-
-LessMess::LessMess(LessMessWidget * p) {
-	parent = p;
-	params.resize(NUM_PARAMS);
-	inputs.resize(NUM_INPUTS);
-	outputs.resize(NUM_OUTPUTS);
-}
-
 
 void LessMess::step() {
 
@@ -82,7 +73,7 @@ void LessMess::step() {
 
 #define V_SEP 35
 LessMessWidget::LessMessWidget() {
-	LessMess *module = new LessMess(this);
+	LessMess *module = new LessMess();
 	label = new TextField*[LessMess::NUM_INPUTS];
 
 	setModule(module);

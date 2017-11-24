@@ -18,15 +18,9 @@ struct constant : Module {
 		NUM_OUTPUTS
 	};
 
-	constant();
+	constant() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, 0) {}
 	void step() override;
 };
-
-constant::constant() {
-	params.resize(NUM_PARAMS);
-	inputs.resize(NUM_INPUTS);
-	outputs.resize(NUM_OUTPUTS);
-}
 
 void constant::step() {
 

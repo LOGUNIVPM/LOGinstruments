@@ -110,19 +110,6 @@ struct Speck : Module {
 	}
 };
 
-/*
-Speck::Speck() {
-	params.resize(NUM_PARAMS);
-	inputs.resize(NUM_INPUTS);
-	outputs.resize(NUM_OUTPUTS);
-
-	cfg_for_FFT = kiss_fft_alloc( FFT_POINTS, DIR_FFT, 0, 0 );
-	cfg_for_IFFT = kiss_fft_alloc( FFT_POINTS, INV_FFT, 0, 0 );
-	//HannW = NULL;
-	HannWindow(&HannW[0], BUFFER_SIZE);
-}
-*/
-
 Speck::~Speck() {
 	free(cfg_for_FFT);
 	free(cfg_for_IFFT);
