@@ -66,8 +66,8 @@ void velvet::step() {
 	float r1 = dis(gen);
 	float r2 = dis(gen);
 #else
-	float r1 = static_cast <float> (rand()) / (float)RAND_MAX;
-	float r2 = static_cast <float> (rand()) / (float)RAND_MAX;
+	float r1 = static_cast <float> (/*better?*/drand48()) / (float)RAND_MAX;
+	float r2 = static_cast <float> (drand48()) / (float)RAND_MAX;
 #endif
 
 

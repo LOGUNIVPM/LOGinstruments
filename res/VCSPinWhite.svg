@@ -9,8 +9,8 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="5.7626343mm"
-   height="4.9455552mm"
+   width="20.418783"
+   height="17.523621"
    viewBox="0 0 20.418783 17.523621"
    id="svg5356"
    version="1.1"
@@ -22,9 +22,9 @@
        inkscape:collect="always"
        style="color-interpolation-filters:sRGB"
        id="filter11983"
-       x="-0.08313843"
+       x="-0.083138429"
        width="1.1662769"
-       y="-0.077889176"
+       y="-0.077889174"
        height="1.1557784">
       <feGaussianBlur
          inkscape:collect="always"
@@ -64,7 +64,8 @@
      fit-margin-top="0"
      fit-margin-left="0"
      fit-margin-right="0"
-     fit-margin-bottom="0" />
+     fit-margin-bottom="0"
+     units="px" />
   <metadata
      id="metadata5361">
     <rdf:RDF>
