@@ -21,7 +21,7 @@ The bottom matrix, Britix-IO is just an input-output matrix so that each pin con
 
 OUT2 = INA + INB + INC
 
-Easy peasy.
+Easy peasy. Please remember that both outputs are normalized by scaling by 1/3 (the number of inputs).
 
 # Speck
 This plugin is meant for visualizing the Discrete Fourier Transform of a signal. The processing is based on KissFFT source code and employs a Hann window over 2k points. There are two independent channels available and the graph can be plotted on a linear frequency scale or a logarithmic frequency scale, with zoom and adaptive grid. All data is in dB.
