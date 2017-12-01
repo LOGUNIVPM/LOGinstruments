@@ -84,7 +84,7 @@ void velvet::step() {
 	}
 
 	if (outputs[WHITE_OUT].active)
-		outputs[WHITE_OUT].value = r1 * 10.0;
+		outputs[WHITE_OUT].value = (r1 -0.5) * 10.0;
 
 }
 
