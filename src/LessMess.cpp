@@ -37,27 +37,6 @@ struct LessMess : Module {
 
 	LessMessWidget * parent;
 
-	json_t *toJson() override {
-		json_t *rootJ = json_object();
-		if (parent) {
-			for (int i = 0; i < NUM_INPUTS; i++) {
-				json_object_set_new(rootJ, ("label" + std::to_string(i)).c_str(), json_string( parent->label[i]->text.c_str() ));
-			}
-			return rootJ;
-		} return NULL;
-	}
-
-	void fromJson(json_t *rootJ) override {
-		for (int i = 0; i < NUM_INPUTS; i++) {
-			if (parent) {
-				json_t *labJ = json_object_get(rootJ, ("label" + std::to_string(i)).c_str());
-				if (labJ) {
-					parent->label[i]->insertText( json_string_value(labJ) );
-				}
-			}
-		}
-	}
-
 	void reset() override {
 		;
 	}
@@ -100,4 +79,25 @@ LessMessWidget::LessMessWidget() {
 		addOutput(createOutput<PJ301MPort>(Vec(box.size.x-30, 30 + i * V_SEP), module, i));
 	}
 
+}
+
+
+json_t *LessMessWidget::toJson() {
+	json_t *rootJ = ModuleWidget::toJson();
+
+	for (int i = 0; i < LessMess::NUM_INPUTS; i++) {
+		json_object_set_new(rootJ, ("label" + std::to_string(i)).c_str(), json_string( label[i]->text.c_str() ));
+	}
+	return rootJ;
+}
+
+void LessMessWidget::fromJson(json_t *rootJ) {
+	ModuleWidget::fromJson(rootJ);
+
+	for (int i = 0; i < LessMess::NUM_INPUTS; i++) {
+		json_t *labJ = json_object_get(rootJ, ("label" + std::to_string(i)).c_str());
+		if (labJ) {
+			label[i]->text = json_string_value(labJ);
+		}
+	}
 }

@@ -34,6 +34,8 @@ struct CompaWidget : ModuleWidget {
 struct LessMessWidget : ModuleWidget {
 	TextField ** label;
 	LessMessWidget();
+	json_t *toJson() override;
+	void fromJson(json_t *rootJ) override;
 };
 
 
