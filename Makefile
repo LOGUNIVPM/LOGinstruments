@@ -2,6 +2,7 @@ SLUG = LOGinstruments
 VERSION = 0.5.4
 
 SOURCES = $(wildcard src/*.cpp)
+SOURCES += $(wildcard src/*.c)
 
 
 include ../../plugin.mk

@@ -49,27 +49,6 @@ struct VelvetWidget : ModuleWidget {
 // Additional GUI stuff
 ////////////////////
 
-struct VCSPin4State : SVGSwitch, ToggleSwitch {
-	VCSPin4State() {
-		addFrame(SVG::load(assetPlugin(plugin, "res/VCSPinNone.svg")));
-		addFrame(SVG::load(assetPlugin(plugin, "res/VCSPinRed.svg")));
-		addFrame(SVG::load(assetPlugin(plugin, "res/VCSPinBlue.svg")));
-		addFrame(SVG::load(assetPlugin(plugin, "res/VCSPinBlack.svg")));
-		sw->wrap();
-		box.size = sw->box.size;
-	}
-};
-
-struct VCSPin2State : SVGSwitch, ToggleSwitch {
-	VCSPin2State() {
-		addFrame(SVG::load(assetPlugin(plugin, "res/VCSPinNone.svg")));
-		addFrame(SVG::load(assetPlugin(plugin, "res/VCSPinWhite.svg")));
-		sw->wrap();
-		box.size = sw->box.size;
-	}
-};
-
-
 #ifdef DEBUG
   #define dbgPrint(a) printf a
 #else
