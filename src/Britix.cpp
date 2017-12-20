@@ -2,8 +2,7 @@
 #include <math.h>
 #include <float.h>
 #include "LOGinstruments.hpp"
-
-#define VERSION "1.0"
+#include "LOGgui.hpp"
 
 /*
  * 3x3 MATRIX MOD

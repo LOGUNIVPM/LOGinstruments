@@ -6,12 +6,8 @@
 #include "kiss_fft.h"
 #include "dsp/digital.hpp"
 
-#define VERSION "1.0"
-
 /*
  * FFT SCOPE, BASED ON SCOPE
- * Todo: changeable resolution/window
- * Todo: LOG: piccola imprecisione nella larghezza (conseguenza: il picco a 1khz che non è preciso sulla grid)
  * Todo: precise f0 estimate
  */
 
@@ -289,7 +285,7 @@ struct SpeckDisplay : TransparentWidget {
 			}
 
 			float residual = semilogx[FFT_POINTS_NYQ-1] - (semilogx[FFT_POINTS_NYQ-1]/fzoom); // excluded from plot
-			negOffs = - (foffs / FOFFS_RANGE) * residual;
+			negOffs = - (0.8*foffs / FOFFS_RANGE) * residual;
 /*
 			for (int i = 0; i < FFT_POINTS_NYQ; i++) {
 				semilogx[i] = negOffs + semilogx[i]; // apply the range of the box TODO togliere?

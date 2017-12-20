@@ -1,10 +1,13 @@
 #include "rack.hpp"
 
-
 using namespace rack;
 
 
 extern Plugin *plugin;
+
+template <typename T> int sign(T val) {
+    return (T(0) < val) - (val < T(0));
+}
 
 ////////////////////
 // module widgets
@@ -14,17 +17,16 @@ struct constantWidget : ModuleWidget {
 	constantWidget();
 };
 
+struct constant2Widget : ModuleWidget {
+	constant2Widget();
+};
+
 struct SpeckWidget : ModuleWidget {
 	SpeckWidget();
 };
 
 struct BritixWidget : ModuleWidget {
 	BritixWidget();
-};
-
-
-struct BrexitWidget : ModuleWidget {
-	BrexitWidget();
 };
 
 struct CompaWidget : ModuleWidget {
@@ -66,3 +68,11 @@ struct VCSPin2State : SVGSwitch, ToggleSwitch {
 		box.size = sw->box.size;
 	}
 };
+
+
+#ifdef DEBUG
+  #define dbgPrint(a) printf a
+#else
+  #define dbgPrint(a) (void)0
+#endif
+
