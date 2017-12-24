@@ -45,6 +45,11 @@ struct VelvetWidget : ModuleWidget {
 	VelvetWidget();
 };
 
+struct CrystalWidget : ModuleWidget {
+	CrystalWidget();
+};
+
+
 ////////////////////
 // Additional GUI stuff
 ////////////////////

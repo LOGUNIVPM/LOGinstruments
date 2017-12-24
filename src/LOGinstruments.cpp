@@ -19,4 +19,5 @@ void init(rack::Plugin *p) {
 	p->addModel(createModel<CompaWidget>("LOGinstruments", "Compa", "Comparator", DIGITAL_TAG, QUANTIZER_TAG));
 	p->addModel(createModel<LessMessWidget>("LOGinstruments", "LessMess", "Tidy Up Cables", UTILITY_TAG, VISUAL_TAG));
 	p->addModel(createModel<VelvetWidget>("LOGinstruments", "Velvet", "Velvet Noise Gen", NOISE_TAG, RANDOM_TAG));
+	p->addModel(createModel<CrystalWidget>("LOGinstruments", "Crystal", "Crystal", OSCILLATOR_TAG ));
 }
