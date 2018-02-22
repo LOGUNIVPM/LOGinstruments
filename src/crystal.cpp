@@ -580,7 +580,7 @@ void CrystalModule::step() {
 
 	algo = (int)round(cv2) % (int)NUM_OSC_TYPES;
 
-	pitch = clampf(12*(cv3), -32.0, 54.0) ;
+	pitch = clamp(12.0f*(cv3), -32.0f, 54.0f) ;
 
 	if (params[PARAM_ILIKETHIS].value != 1.0) {
 		if (M_RST.process(params[PARAM_MANUAL_RST].value) || CV_RST.process(cv1)) {
@@ -618,13 +618,13 @@ void CrystalModule::step() {
 		for (int i = 1; i < allocd_voices; i+=2) {
 			resultL += PER_VOICE_ATT * voices[i]->process();
 #if DEBUG_LIGHTS
-			lights[i].value = clampf(voices[i]->getNrg(), 0.0, 10.0);
+			lights[i].value = (voices[i]->getNrg(), 0.0f, 10.0f);
 #endif
 		}
 		for (int i = 2; i < allocd_voices; i+=2) {
 			resultH += PER_VOICE_ATT * voices[i]->process();
 #if DEBUG_LIGHTS
-			lights[i].value = clampf(voices[i]->getNrg(), 0.0, 10.0);
+			lights[i].value = clamp(voices[i]->getNrg(), 0.0f, 10.0f);
 #endif
 		}
 		float vol = powf(10, params[PARAM_VOLUME].value/10.0);
@@ -638,9 +638,9 @@ void CrystalModule::step() {
 				dcblockR->reset();
 			}
 		}
-		outputs[OUT_LOW_DET].value = clampf(2* vol * resultL, -15.0, 15.0);
-		outputs[OUT_HIGH_DET].value = clampf(2* vol * resultH, -15.0, 15.0);
-		outputs[OUT_MAIN].value = clampf(vol * result, -15.0, 15.0);
+		outputs[OUT_LOW_DET].value = clamp(2.0f* vol * resultL, -15.0f, 15.0f);
+		outputs[OUT_HIGH_DET].value = clamp(2.0f* vol * resultH, -15.0f, 15.0f);
+		outputs[OUT_MAIN].value = clamp(vol * result, -15.0f, 15.0f);
 	}
 
 }
@@ -671,8 +671,8 @@ struct CrystalDisplay : TransparentWidget {
 			p = gemcoor[i].mult(b.size);
 			nvgMoveTo(vg, p.x, p.y);
 
-			randLight[i+1] +=  (int)(128 *(randomf()-0.5));
-			unsigned char nrg = (unsigned char) clampf(module->voices[i]->getNrg()*256.0, 20.0, 256.0);
+			randLight[i+1] +=  (int)(128 *(randomUniform()-0.5));
+			unsigned char nrg = (unsigned char) clamp(module->voices[i]->getNrg()*256.0f, 20.0f, 256.0f);
 			pnt[i+1] = nvgLinearGradient(vg, b.pos.x, b.pos.y, b.pos.x+b.size.x, b.pos.y+b.size.y,
 					nvgRGBA(0x40, 0x75, 0xDB, nrg), nvgRGBA(0x8C, 0xAC, 0xEA, nrg+randLight[i+1]));
 			nvgStrokePaint(vg, pnt[i+1]);
@@ -686,7 +686,7 @@ struct CrystalDisplay : TransparentWidget {
 		}
 #else
 		for (int i = 0; i < module->allocd_voices; i++) {
-			randLight[i+1] +=  (int)(256 *(randomf()-0.5));
+			randLight[i+1] +=  (int)(256 *(randomUniform()-0.5));
 			NVGpaint pnt = nvgLinearGradient(vg, b.pos.x, b.pos.y, b.pos.x+b.size.x, b.pos.y+b.size.y,
 					nvgRGBA(0x20, 0x60, 0xD0, randLight[i]), nvgRGBA(0x20, 0x60, 0xD0, randLight[i+1]));
 			nvgStrokePaint(vg, pnt);
@@ -710,9 +710,11 @@ struct CrystalDisplay : TransparentWidget {
 };
 
 
-CrystalWidget::CrystalWidget() {
-	CrystalModule *module = new CrystalModule();
-	setModule(module);
+struct CrystalWidget : ModuleWidget {
+	CrystalWidget(CrystalModule *module);
+};
+
+CrystalWidget::CrystalWidget(CrystalModule *module) : ModuleWidget(module) {
 	box.size = Vec(15*13, 380);
 
 	{
@@ -722,20 +724,20 @@ CrystalWidget::CrystalWidget() {
 		addChild(panel);
 	}
 
-	addParam(createParam<RoundBlackKnob>(Vec(140, 210), module, CrystalModule::PARAM_VOICES, 1.0, MAX_OSC, 1.0));
-	addParam(createParam<RoundBlackKnob>(Vec(20, 210), module, CrystalModule::PARAM_DETUNE, 0.0, 1.0, 0.1));
-	addParam(createParam<RoundBlackKnob>(Vec(20, 280), module, CrystalModule::PARAM_VOLUME, -30, 6.0, 0.0));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(140, 210), module, CrystalModule::PARAM_VOICES, 1.0, MAX_OSC, 1.0));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(20, 210), module, CrystalModule::PARAM_DETUNE, 0.0, 1.0, 0.1));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(20, 280), module, CrystalModule::PARAM_VOLUME, -30, 6.0, 0.0));
 
-	addInput(createInput<PJ301MPort>(Vec(0, 80), module, CrystalModule::IN_CV1));
-	addInput(createInput<PJ301MPort>(Vec(box.size.x-24, 80), module, CrystalModule::IN_CV2));
-	addInput(createInput<PJ301MPort>(Vec(box.size.x/2-12, 160), module, CrystalModule::IN_CV3));
+	addInput(Port::create<PJ301MPort>(Vec(0, 80), Port::INPUT, module, CrystalModule::IN_CV1));
+	addInput(Port::create<PJ301MPort>(Vec(box.size.x-24, 80), Port::INPUT, module, CrystalModule::IN_CV2));
+	addInput(Port::create<PJ301MPort>(Vec(box.size.x/2-12, 160), Port::INPUT, module, CrystalModule::IN_CV3));
 
-	addParam(createParam<CKD6>(Vec(85, 284), module, CrystalModule::PARAM_MANUAL_RST, 0.0, 1.0, 0.0));
-	addParam(createParam<CKSS>(Vec(150, 285), module, CrystalModule::PARAM_ILIKETHIS, 0.0, 1.0, 0.0));
+	addParam(ParamWidget::create<CKD6>(Vec(85, 284), module, CrystalModule::PARAM_MANUAL_RST, 0.0, 1.0, 0.0));
+	addParam(ParamWidget::create<CKSS>(Vec(150, 285), module, CrystalModule::PARAM_ILIKETHIS, 0.0, 1.0, 0.0));
 
-	addOutput(createOutput<PJ301MPort>(Vec(80, 345), module, CrystalModule::OUT_MAIN));
-	addOutput(createOutput<PJ301MPort>(Vec(10, 325), module, CrystalModule::OUT_LOW_DET));
-	addOutput(createOutput<PJ301MPort>(Vec(160, 325), module, CrystalModule::OUT_HIGH_DET));
+	addOutput(Port::create<PJ301MPort>(Vec(80, 345), Port::OUTPUT, module, CrystalModule::OUT_MAIN));
+	addOutput(Port::create<PJ301MPort>(Vec(10, 325), Port::OUTPUT, module, CrystalModule::OUT_LOW_DET));
+	addOutput(Port::create<PJ301MPort>(Vec(160, 325), Port::OUTPUT, module, CrystalModule::OUT_HIGH_DET));
 
 
 	{
@@ -748,9 +750,10 @@ CrystalWidget::CrystalWidget() {
 #ifdef DEBUG_LIGHTS
 	int i;
 	for (i = 0; i < (int)MAX_OSC-1; i++) {
-		addChild(createLight<TinyLight<GreenLight>>(Vec(5 + (i*5), 360), module, i));
+		addChild(ModuleLightWidget::create<TinyLight<GreenLight>>(Vec(5 + (i*5), 360), module, i));
 	}
-	addChild(createLight<TinyLight<GreenLight>>(Vec(50, 30), module, i));
+	addChild(ModuleLightWidget::create<TinyLight<GreenLight>>(Vec(50, 30), module, i));
 #endif
 }
 
+Model *modelCrystal = Model::create<CrystalModule, CrystalWidget>("LOGinstruments", "Crystal", "Crystal", OSCILLATOR_TAG);

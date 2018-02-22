@@ -480,9 +480,11 @@ struct SpeckDisplay : TransparentWidget {
 };
 
 
-SpeckWidget::SpeckWidget() {
-	Speck *module = new Speck();
-	setModule(module);
+struct SpeckWidget : ModuleWidget {
+	SpeckWidget(Speck *module);
+};
+
+SpeckWidget::SpeckWidget(Speck *module) : ModuleWidget(module) {
 	box.size = Vec(15*20, 380);
 
 	{
@@ -492,10 +494,10 @@ SpeckWidget::SpeckWidget() {
 		addChild(panel);
 	}
 /*
-	addChild(createScrew<ScrewSilver>(Vec(15, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
+	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(15, 365)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 365)));
 */
 	{
 		SpeckDisplay *display = new SpeckDisplay();
@@ -505,23 +507,25 @@ SpeckWidget::SpeckWidget() {
 		addChild(display);
 	}
 
-	addParam(createParam<RoundSmallBlackSnapKnob>(Vec(118, 244), module, Speck::SCALE_1_PARAM, -10.0, 20.0, -1.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(118, 297), module, Speck::POS_1_PARAM, -1.0, 1.0, 0.0));
-	addParam(createParam<RoundSmallBlackSnapKnob>(Vec(167, 244), module, Speck::SCALE_2_PARAM, -10.0, 20.0, -1.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(167, 297), module, Speck::POS_2_PARAM, -1.0, 1.0, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(213, 244), module, Speck::ZOOM_PARAM, 1.0, ZOOM_RANGE, 1.0));
-	addParam(createParam<CKD6>(Vec(258, 244), module, Speck::LINLOG_PARAM, 0.0, 1.0, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(213, 297), module, Speck::FOFFS_PARAM, 0.0, FOFFS_RANGE, 0.0));
-	addParam(createParam<CKD6>(Vec(239, 12), module, Speck::ONOFF_PARAM, 0.0, 1.0, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackSnapKnob>(Vec(118, 244), module, Speck::SCALE_1_PARAM, -10.0, 20.0, -1.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(118, 297), module, Speck::POS_1_PARAM, -1.0, 1.0, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackSnapKnob>(Vec(167, 244), module, Speck::SCALE_2_PARAM, -10.0, 20.0, -1.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(167, 297), module, Speck::POS_2_PARAM, -1.0, 1.0, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(213, 244), module, Speck::ZOOM_PARAM, 1.0, ZOOM_RANGE, 1.0));
+	addParam(ParamWidget::create<CKD6>(Vec(258, 244), module, Speck::LINLOG_PARAM, 0.0, 1.0, 0.0));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(213, 297), module, Speck::FOFFS_PARAM, 0.0, FOFFS_RANGE, 0.0));
+	addParam(ParamWidget::create<CKD6>(Vec(239, 12), module, Speck::ONOFF_PARAM, 0.0, 1.0, 0.0));
 
-	addInput(createInput<PJ301MPort>(Vec(12, 240), module, Speck::INPUT_1));
-	addInput(createInput<PJ301MPort>(Vec(59, 240), module, Speck::INPUT_2));
+	addInput(Port::create<PJ301MPort>(Vec(12, 240), Port::INPUT, module, Speck::INPUT_1));
+	addInput(Port::create<PJ301MPort>(Vec(59, 240), Port::INPUT, module, Speck::INPUT_2));
 
-	addOutput(createOutput<PJ3410Port>(Vec(9, 306), module, Speck::OUTPUT_1));
-	addOutput(createOutput<PJ3410Port>(Vec(56, 306), module, Speck::OUTPUT_2));
+	addOutput(Port::create<PJ3410Port>(Vec(9, 306), Port::OUTPUT, module, Speck::OUTPUT_1));
+	addOutput(Port::create<PJ3410Port>(Vec(56, 306), Port::OUTPUT, module, Speck::OUTPUT_2));
 
-	addChild(createLight<TinyLight<GreenLight>>(Vec(286, 230), module, Speck::LIGHTS_0_LIN));
-	addChild(createLight<TinyLight<GreenLight>>(Vec(286, 280), module, Speck::LIGHTS_1_LOG));
-	addChild(createLight<TinyLight<GreenLight>>(Vec(265, 8), module, Speck::LIGHTS_2_ON));
+	addChild(ModuleLightWidget::create<TinyLight<GreenLight>>(Vec(286, 230), module, Speck::LIGHTS_0_LIN));
+	addChild(ModuleLightWidget::create<TinyLight<GreenLight>>(Vec(286, 280), module, Speck::LIGHTS_1_LOG));
+	addChild(ModuleLightWidget::create<TinyLight<GreenLight>>(Vec(265, 8), module, Speck::LIGHTS_2_ON));
 
 }
+
+Model *modelSpeck = Model::create<Speck, SpeckWidget>("LOGinstruments", "Speck", "Spectrum Analyzer", VISUAL_TAG, UTILITY_TAG);

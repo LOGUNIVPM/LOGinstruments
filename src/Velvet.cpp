@@ -66,8 +66,8 @@ void velvet::step() {
 	float r1 = dis(gen);
 	float r2 = dis(gen);
 #else
-	float r1 = static_cast <float> (randomf()) ;
-	float r2 = static_cast <float> (randomf()) ;
+	float r1 = static_cast <float> (randomUniform()) ;
+	float r2 = static_cast <float> (randomUniform()) ;
 #endif
 
 
@@ -89,9 +89,11 @@ void velvet::step() {
 }
 
 
-VelvetWidget::VelvetWidget() {
-	velvet *module = new velvet();
-	setModule(module);
+struct VelvetWidget : ModuleWidget {
+	VelvetWidget(velvet *module);
+};
+
+VelvetWidget::VelvetWidget(velvet *module) : ModuleWidget(module) {
 	box.size = Vec(15*10, 380);
 
 	{
@@ -101,12 +103,14 @@ VelvetWidget::VelvetWidget() {
 		addChild(panel);
 	}
 
-	addParam(createParam<Davies1900hBlackKnob>(Vec(55, 95), module, velvet::RATE, 0.0, 1.0, 0.5));
-	addParam(createParam<CKSS>(Vec(66, 200), module, velvet::ENERGY_MODE, 0.0, 1.0, 1.0));
+	addParam(ParamWidget::create<Davies1900hBlackKnob>(Vec(55, 95), module, velvet::RATE, 0.0, 1.0, 0.5));
+	addParam(ParamWidget::create<CKSS>(Vec(66, 200), module, velvet::ENERGY_MODE, 0.0, 1.0, 1.0));
 
-	addInput(createInput<PJ301MPort>(Vec(8, 156), module, velvet::INPUT_RATE));
+	addInput(Port::create<PJ301MPort>(Vec(8, 156), Port::INPUT, module, velvet::INPUT_RATE));
 
-	addOutput(createOutput<PJ3410Port>(Vec(30, 260), module, velvet::VELVET_OUT));
-	addOutput(createOutput<PJ3410Port>(Vec(90, 260), module, velvet::WHITE_OUT));
+	addOutput(Port::create<PJ3410Port>(Vec(30, 260), Port::OUTPUT, module, velvet::VELVET_OUT));
+	addOutput(Port::create<PJ3410Port>(Vec(90, 260), Port::OUTPUT, module, velvet::WHITE_OUT));
 }
 
+
+Model *modelVelvet = Model::create<velvet, VelvetWidget>("LOGinstruments", "Velvet", "Velvet Noise Gen", NOISE_TAG, RANDOM_TAG);
