@@ -45,10 +45,12 @@ void Compa::step() {
 }
 
 #define BOTTOM_VDIST 175
-CompaWidget::CompaWidget() {
-	Compa *module = new Compa();
+struct CompaWidget : ModuleWidget {
+	CompaWidget(Compa *module);
+};
 
-	setModule(module);
+CompaWidget::CompaWidget(Compa *module) : ModuleWidget(module) {
+
 
 	box.size = Vec(15*6, 380);
 
@@ -59,16 +61,18 @@ CompaWidget::CompaWidget() {
 		addChild(panel);
 	}
 
-	addInput(createInput<PJ301MPort>(Vec(50, 58), module, Compa::INPUTA1));
-	addInput(createInput<PJ301MPort>(Vec(50, 88), module, Compa::INPUTB1));
-	addInput(createInput<PJ301MPort>(Vec(50, 58+BOTTOM_VDIST), module, Compa::INPUTA2));
-	addInput(createInput<PJ301MPort>(Vec(50, 88+BOTTOM_VDIST), module, Compa::INPUTB2));
+	addInput(Port::create<PJ301MPort>(Vec(50, 58), Port::INPUT, module, Compa::INPUTA1));
+	addInput(Port::create<PJ301MPort>(Vec(50, 88), Port::INPUT, module, Compa::INPUTB1));
+	addInput(Port::create<PJ301MPort>(Vec(50, 58+BOTTOM_VDIST), Port::INPUT, module, Compa::INPUTA2));
+	addInput(Port::create<PJ301MPort>(Vec(50, 88+BOTTOM_VDIST), Port::INPUT, module, Compa::INPUTB2));
 
-	addOutput(createOutput<PJ3410Port>(Vec(46, 118), module, Compa::OUTPUT1));
-	addOutput(createOutput<PJ3410Port>(Vec(46, 118+BOTTOM_VDIST), module, Compa::OUTPUT2));
+	addOutput(Port::create<PJ3410Port>(Vec(46, 118), Port::OUTPUT, module, Compa::OUTPUT1));
+	addOutput(Port::create<PJ3410Port>(Vec(46, 118+BOTTOM_VDIST), Port::OUTPUT, module, Compa::OUTPUT2));
 
-	addChild(createLight<TinyLight<GreenLight>>(Vec(35, 130), module, Compa::LIGHT_1));
-	addChild(createLight<TinyLight<GreenLight>>(Vec(35, 130+BOTTOM_VDIST), module, Compa::LIGHT_2));
+	addChild(ModuleLightWidget::create<TinyLight<GreenLight>>(Vec(35, 130), module, Compa::LIGHT_1));
+	addChild(ModuleLightWidget::create<TinyLight<GreenLight>>(Vec(35, 130+BOTTOM_VDIST), module, Compa::LIGHT_2));
 
 
 }
+
+Model *modelCompa = Model::create<Compa, CompaWidget>("LOGinstruments", "Compa", "Comparator", DIGITAL_TAG, QUANTIZER_TAG);

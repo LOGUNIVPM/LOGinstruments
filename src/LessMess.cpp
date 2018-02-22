@@ -3,6 +3,8 @@
 #include <float.h>
 #include "LOGinstruments.hpp"
 
+struct LessMessWidget;
+
 struct LessMess : Module {
 	enum ParamIds {
 		NUM_PARAMS,
@@ -51,11 +53,15 @@ void LessMess::step() {
 }
 
 #define V_SEP 35
-LessMessWidget::LessMessWidget() {
-	LessMess *module = new LessMess();
-	label = new TextField*[LessMess::NUM_INPUTS];
+struct LessMessWidget : ModuleWidget {
+	TextField ** label;
+	LessMessWidget(LessMess *module);
+	json_t *toJson() override;
+	void fromJson(json_t *rootJ) override;
+};
 
-	setModule(module);
+LessMessWidget::LessMessWidget(LessMess *module) : ModuleWidget(module) {
+	label = new TextField*[LessMess::NUM_INPUTS];
 
 	box.size = Vec(15*16, 380);
 
@@ -67,7 +73,7 @@ LessMessWidget::LessMessWidget() {
 	}
 
 	for (int i = 0; i < LessMess::NUM_INPUTS; i++) {
-		addInput(createInput<PJ301MPort>(Vec(10, 30 + i*V_SEP), module, i));
+		addInput(Port::create<PJ301MPort>(Vec(10, 30 + i*V_SEP), Port::INPUT, module, i));
 
 		label[i] = new TextField();
 		/*label[i]->text = "cable " + std::to_string(i);
@@ -76,7 +82,7 @@ LessMessWidget::LessMessWidget() {
 		label[i]->box.size.x = box.size.x-75;
 		addChild(label[i]);
 
-		addOutput(createOutput<PJ301MPort>(Vec(box.size.x-30, 30 + i * V_SEP), module, i));
+		addOutput(Port::create<PJ301MPort>(Vec(box.size.x-30, 30 + i * V_SEP), Port::OUTPUT, module, i));
 	}
 
 }
@@ -101,3 +107,5 @@ void LessMessWidget::fromJson(json_t *rootJ) {
 		}
 	}
 }
+
+Model *modelLessMess = Model::create<LessMess, LessMessWidget>("LOGinstruments", "LessMess", "Tidy Up Cables", UTILITY_TAG, VISUAL_TAG);

@@ -79,9 +79,11 @@ void constant2::step() {
 
 }
 
-constant2Widget::constant2Widget() {
-	constant2 *module = new constant2();
-	setModule(module);
+struct constant2Widget : ModuleWidget {
+	constant2Widget(constant2 *module);
+};
+
+constant2Widget::constant2Widget(constant2 *module) : ModuleWidget(module) {
 	box.size = Vec(15*8, 380);
 
 	{
@@ -91,18 +93,20 @@ constant2Widget::constant2Widget() {
 		addChild(panel);
 	}
 
-	addParam(createParam<valueKnob>(Vec(40, 60), module, constant2::VALUE_PARAM_1, -1.0, 1.0, 0.0));
-	addParam(createParam<valueKnob>(Vec(40, 150), module, constant2::VALUE_PARAM_10, -10.0, 10.0, 0.0));
-	addParam(createParam<valueKnob>(Vec(40, 240), module, constant2::VALUE_PARAM_100, -100.0, 100.0, 0.0));
+	addParam(ParamWidget::create<valueKnob>(Vec(40, 60), module, constant2::VALUE_PARAM_1, -1.0, 1.0, 0.0));
+	addParam(ParamWidget::create<valueKnob>(Vec(40, 150), module, constant2::VALUE_PARAM_10, -10.0, 10.0, 0.0));
+	addParam(ParamWidget::create<valueKnob>(Vec(40, 240), module, constant2::VALUE_PARAM_100, -100.0, 100.0, 0.0));
 
-	addOutput(createOutput<PJ301MPort>(Vec(85, 65), module, constant2::OUT_1));
-	addOutput(createOutput<PJ301MPort>(Vec(85, 155), module, constant2::OUT_10));
-	addOutput(createOutput<PJ301MPort>(Vec(85, 245), module, constant2::OUT_100));
+	addOutput(Port::create<PJ301MPort>(Vec(85, 65), Port::OUTPUT, module, constant2::OUT_1));
+	addOutput(Port::create<PJ301MPort>(Vec(85, 155), Port::OUTPUT, module, constant2::OUT_10));
+	addOutput(Port::create<PJ301MPort>(Vec(85, 245), Port::OUTPUT, module, constant2::OUT_100));
 }
 
-constantWidget::constantWidget() {
-	constant *module = new constant();
-	setModule(module);
+struct constantWidget : ModuleWidget {
+	constantWidget(constant *module);
+};
+
+constantWidget::constantWidget(constant *module) : ModuleWidget(module) {
 	box.size = Vec(15*8, 380);
 
 	{
@@ -112,18 +116,21 @@ constantWidget::constantWidget() {
 		addChild(panel);
 	}
 
-	addParam(createParam<RoundBlackKnob>(Vec(40, 60), module, constant::VALUE_PARAM_1, -1.0, 1.0, 0.0));
-	addParam(createParam<RoundBlackKnob>(Vec(40, 100), module, constant::VALUE_PARAM_1B, -1.0, 1.0, 0.0));
-	addParam(createParam<RoundBlackKnob>(Vec(40, 150), module, constant::VALUE_PARAM_10, -10.0, 10.0, 0.0));
-	addParam(createParam<RoundBlackKnob>(Vec(40, 190), module, constant::VALUE_PARAM_10B, -10.0, 10.0, 0.0));
-	addParam(createParam<RoundBlackKnob>(Vec(40, 240), module, constant::VALUE_PARAM_100, -100.0, 100.0, 0.0));
-	addParam(createParam<RoundBlackKnob>(Vec(40, 280), module, constant::VALUE_PARAM_100B, -100.0, 100.0, 0.0));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(40, 60), module, constant::VALUE_PARAM_1, -1.0, 1.0, 0.0));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(40, 100), module, constant::VALUE_PARAM_1B, -1.0, 1.0, 0.0));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(40, 150), module, constant::VALUE_PARAM_10, -10.0, 10.0, 0.0));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(40, 190), module, constant::VALUE_PARAM_10B, -10.0, 10.0, 0.0));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(40, 240), module, constant::VALUE_PARAM_100, -100.0, 100.0, 0.0));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(40, 280), module, constant::VALUE_PARAM_100B, -100.0, 100.0, 0.0));
 
-	addOutput(createOutput<PJ301MPort>(Vec(85, 65), module, constant::OUT_1));
-	addOutput(createOutput<PJ301MPort>(Vec(85, 105), module, constant::OUT_1B));
-	addOutput(createOutput<PJ301MPort>(Vec(85, 155), module, constant::OUT_10));
-	addOutput(createOutput<PJ301MPort>(Vec(85, 195), module, constant::OUT_10B));
-	addOutput(createOutput<PJ301MPort>(Vec(85, 245), module, constant::OUT_100));
-	addOutput(createOutput<PJ301MPort>(Vec(85, 285), module, constant::OUT_100B));
+	addOutput(Port::create<PJ301MPort>(Vec(85, 65), Port::OUTPUT, module, constant::OUT_1));
+	addOutput(Port::create<PJ301MPort>(Vec(85, 105), Port::OUTPUT, module, constant::OUT_1B));
+	addOutput(Port::create<PJ301MPort>(Vec(85, 155), Port::OUTPUT, module, constant::OUT_10));
+	addOutput(Port::create<PJ301MPort>(Vec(85, 195), Port::OUTPUT, module, constant::OUT_10B));
+	addOutput(Port::create<PJ301MPort>(Vec(85, 245), Port::OUTPUT, module, constant::OUT_100));
+	addOutput(Port::create<PJ301MPort>(Vec(85, 285), Port::OUTPUT, module, constant::OUT_100B));
 }
 
+
+Model *modelconstant = Model::create<constant, constantWidget>("LOGinstruments", "Constant", "DC Offset Gen", UTILITY_TAG);
+Model *modelconstant2 = Model::create<constant2, constant2Widget>("LOGinstruments", "Constant2", "Precise DC Gen", UTILITY_TAG);

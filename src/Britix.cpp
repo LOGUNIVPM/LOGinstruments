@@ -181,10 +181,12 @@ void Britix::step() {
 
 }
 
-BritixWidget::BritixWidget() {
-	Britix *module = new Britix();
+struct BritixWidget : ModuleWidget {
+	BritixWidget(Britix *module);
+};
 
-	setModule(module);
+BritixWidget::BritixWidget(Britix *module) : ModuleWidget(module) {
+
 
 	box.size = Vec(15*20, 380);
 
@@ -196,51 +198,53 @@ BritixWidget::BritixWidget() {
 	}
 
 	// TOP
-	addParam(createParam<VCSPin4State>(Vec(68,56), module, Britix::MAT1_A_A_PIN, 0.0, 3.0, 0.0));
-	addParam(createParam<VCSPin4State>(Vec(98,56), module, Britix::MAT1_A_B_PIN, 0.0, 3.0, 0.0));
-	addParam(createParam<VCSPin4State>(Vec(128,56), module, Britix::MAT1_A_C_PIN, 0.0, 3.0, 0.0));
-	addParam(createParam<VCSPin4State>(Vec(68,86), module, Britix::MAT1_B_A_PIN, 0.0, 3.0, 0.0));
-	addParam(createParam<VCSPin4State>(Vec(98,86), module, Britix::MAT1_B_B_PIN, 0.0, 3.0, 0.0));
-	addParam(createParam<VCSPin4State>(Vec(128,86), module, Britix::MAT1_B_C_PIN, 0.0, 3.0, 0.0));
-	addParam(createParam<VCSPin4State>(Vec(68,116), module, Britix::MAT1_C_A_PIN, 0.0, 3.0, 0.0));
-	addParam(createParam<VCSPin4State>(Vec(98,116), module, Britix::MAT1_C_B_PIN, 0.0, 3.0, 0.0));
-	addParam(createParam<VCSPin4State>(Vec(128,116), module, Britix::MAT1_C_C_PIN, 0.0, 3.0, 0.0));
+	addParam(ParamWidget::create<VCSPin4State>(Vec(68,56), module, Britix::MAT1_A_A_PIN, 0.0, 3.0, 0.0));
+	addParam(ParamWidget::create<VCSPin4State>(Vec(98,56), module, Britix::MAT1_A_B_PIN, 0.0, 3.0, 0.0));
+	addParam(ParamWidget::create<VCSPin4State>(Vec(128,56), module, Britix::MAT1_A_C_PIN, 0.0, 3.0, 0.0));
+	addParam(ParamWidget::create<VCSPin4State>(Vec(68,86), module, Britix::MAT1_B_A_PIN, 0.0, 3.0, 0.0));
+	addParam(ParamWidget::create<VCSPin4State>(Vec(98,86), module, Britix::MAT1_B_B_PIN, 0.0, 3.0, 0.0));
+	addParam(ParamWidget::create<VCSPin4State>(Vec(128,86), module, Britix::MAT1_B_C_PIN, 0.0, 3.0, 0.0));
+	addParam(ParamWidget::create<VCSPin4State>(Vec(68,116), module, Britix::MAT1_C_A_PIN, 0.0, 3.0, 0.0));
+	addParam(ParamWidget::create<VCSPin4State>(Vec(98,116), module, Britix::MAT1_C_B_PIN, 0.0, 3.0, 0.0));
+	addParam(ParamWidget::create<VCSPin4State>(Vec(128,116), module, Britix::MAT1_C_C_PIN, 0.0, 3.0, 0.0));
 
-	addInput(createInput<PJ301MPort>(Vec(9, 58), module, Britix::INPUT1_A));
-	addInput(createInput<PJ301MPort>(Vec(9, 88), module, Britix::INPUT1_B));
-	addInput(createInput<PJ301MPort>(Vec(9, 118), module, Britix::INPUT1_C));
+	addInput(Port::create<PJ301MPort>(Vec(9, 58), Port::INPUT, module, Britix::INPUT1_A));
+	addInput(Port::create<PJ301MPort>(Vec(9, 88), Port::INPUT, module, Britix::INPUT1_B));
+	addInput(Port::create<PJ301MPort>(Vec(9, 118), Port::INPUT, module, Britix::INPUT1_C));
 
-	addOutput(createOutput<PJ3410Port>(Vec(230, 58), module, Britix::OUTPUT1_A));
-	addOutput(createOutput<PJ3410Port>(Vec(230, 88), module, Britix::OUTPUT1_B));
-	addOutput(createOutput<PJ3410Port>(Vec(230, 118), module, Britix::OUTPUT1_C));
-	addOutput(createOutput<PJ3410Port>(Vec(230, 148), module, Britix::OUTPUT1_SUM));
+	addOutput(Port::create<PJ3410Port>(Vec(230, 58), Port::OUTPUT, module, Britix::OUTPUT1_A));
+	addOutput(Port::create<PJ3410Port>(Vec(230, 88), Port::OUTPUT, module, Britix::OUTPUT1_B));
+	addOutput(Port::create<PJ3410Port>(Vec(230, 118), Port::OUTPUT, module, Britix::OUTPUT1_C));
+	addOutput(Port::create<PJ3410Port>(Vec(230, 148), Port::OUTPUT, module, Britix::OUTPUT1_SUM));
 
-	addChild(createLight<TinyLight<GreenLight>>(Vec(81, 167), module, Britix::LIGHTS1_1));
-	addChild(createLight<TinyLight<GreenLight>>(Vec(111, 167), module, Britix::LIGHTS1_2));
-	addChild(createLight<TinyLight<GreenLight>>(Vec(141, 167), module, Britix::LIGHTS1_3));
+	addChild(ModuleLightWidget::create<TinyLight<GreenLight>>(Vec(81, 167), module, Britix::LIGHTS1_1));
+	addChild(ModuleLightWidget::create<TinyLight<GreenLight>>(Vec(111, 167), module, Britix::LIGHTS1_2));
+	addChild(ModuleLightWidget::create<TinyLight<GreenLight>>(Vec(141, 167), module, Britix::LIGHTS1_3));
 
 	//BOTTOM
 #define BOTTOM_VDIST 175
-	addParam(createParam<VCSPin2State>(Vec(68,56+BOTTOM_VDIST), module, Britix::MAT2_A_A_PIN, 0.0, 1.0, 0.0));
-	addParam(createParam<VCSPin2State>(Vec(98,56+BOTTOM_VDIST), module, Britix::MAT2_A_B_PIN, 0.0, 1.0, 0.0));
-	addParam(createParam<VCSPin2State>(Vec(128,56+BOTTOM_VDIST), module, Britix::MAT2_A_C_PIN, 0.0, 1.0, 0.0));
-	addParam(createParam<VCSPin2State>(Vec(68,86+BOTTOM_VDIST), module, Britix::MAT2_B_A_PIN, 0.0, 1.0, 0.0));
-	addParam(createParam<VCSPin2State>(Vec(98,86+BOTTOM_VDIST), module, Britix::MAT2_B_B_PIN, 0.0, 1.0, 0.0));
-	addParam(createParam<VCSPin2State>(Vec(128,86+BOTTOM_VDIST), module, Britix::MAT2_B_C_PIN, 0.0, 1.0, 0.0));
-	addParam(createParam<VCSPin2State>(Vec(68,116+BOTTOM_VDIST), module, Britix::MAT2_C_A_PIN, 0.0, 1.0, 0.0));
-	addParam(createParam<VCSPin2State>(Vec(98,116+BOTTOM_VDIST), module, Britix::MAT2_C_B_PIN, 0.0, 1.0, 0.0));
-	addParam(createParam<VCSPin2State>(Vec(128,116+BOTTOM_VDIST), module, Britix::MAT2_C_C_PIN, 0.0, 1.0, 0.0));
+	addParam(ParamWidget::create<VCSPin2State>(Vec(68,56+BOTTOM_VDIST), module, Britix::MAT2_A_A_PIN, 0.0, 1.0, 0.0));
+	addParam(ParamWidget::create<VCSPin2State>(Vec(98,56+BOTTOM_VDIST), module, Britix::MAT2_A_B_PIN, 0.0, 1.0, 0.0));
+	addParam(ParamWidget::create<VCSPin2State>(Vec(128,56+BOTTOM_VDIST), module, Britix::MAT2_A_C_PIN, 0.0, 1.0, 0.0));
+	addParam(ParamWidget::create<VCSPin2State>(Vec(68,86+BOTTOM_VDIST), module, Britix::MAT2_B_A_PIN, 0.0, 1.0, 0.0));
+	addParam(ParamWidget::create<VCSPin2State>(Vec(98,86+BOTTOM_VDIST), module, Britix::MAT2_B_B_PIN, 0.0, 1.0, 0.0));
+	addParam(ParamWidget::create<VCSPin2State>(Vec(128,86+BOTTOM_VDIST), module, Britix::MAT2_B_C_PIN, 0.0, 1.0, 0.0));
+	addParam(ParamWidget::create<VCSPin2State>(Vec(68,116+BOTTOM_VDIST), module, Britix::MAT2_C_A_PIN, 0.0, 1.0, 0.0));
+	addParam(ParamWidget::create<VCSPin2State>(Vec(98,116+BOTTOM_VDIST), module, Britix::MAT2_C_B_PIN, 0.0, 1.0, 0.0));
+	addParam(ParamWidget::create<VCSPin2State>(Vec(128,116+BOTTOM_VDIST), module, Britix::MAT2_C_C_PIN, 0.0, 1.0, 0.0));
 
-	addInput(createInput<PJ301MPort>(Vec(9, 58+BOTTOM_VDIST), module, Britix::INPUT2_A));
-	addInput(createInput<PJ301MPort>(Vec(9, 88+BOTTOM_VDIST), module, Britix::INPUT2_B));
-	addInput(createInput<PJ301MPort>(Vec(9, 118+BOTTOM_VDIST), module, Britix::INPUT2_C));
+	addInput(Port::create<PJ301MPort>(Vec(9, 58+BOTTOM_VDIST), Port::INPUT, module, Britix::INPUT2_A));
+	addInput(Port::create<PJ301MPort>(Vec(9, 88+BOTTOM_VDIST), Port::INPUT, module, Britix::INPUT2_B));
+	addInput(Port::create<PJ301MPort>(Vec(9, 118+BOTTOM_VDIST), Port::INPUT, module, Britix::INPUT2_C));
 
-	addOutput(createOutput<PJ3410Port>(Vec(230, 58+BOTTOM_VDIST), module, Britix::OUTPUT2_A));
-	addOutput(createOutput<PJ3410Port>(Vec(230, 88+BOTTOM_VDIST), module, Britix::OUTPUT2_B));
-	addOutput(createOutput<PJ3410Port>(Vec(230, 118+BOTTOM_VDIST), module, Britix::OUTPUT2_C));
-	addOutput(createOutput<PJ3410Port>(Vec(230, 148+BOTTOM_VDIST), module, Britix::OUTPUT2_SUM));
+	addOutput(Port::create<PJ3410Port>(Vec(230, 58+BOTTOM_VDIST), Port::OUTPUT, module, Britix::OUTPUT2_A));
+	addOutput(Port::create<PJ3410Port>(Vec(230, 88+BOTTOM_VDIST), Port::OUTPUT, module, Britix::OUTPUT2_B));
+	addOutput(Port::create<PJ3410Port>(Vec(230, 118+BOTTOM_VDIST), Port::OUTPUT, module, Britix::OUTPUT2_C));
+	addOutput(Port::create<PJ3410Port>(Vec(230, 148+BOTTOM_VDIST), Port::OUTPUT, module, Britix::OUTPUT2_SUM));
 
-	addChild(createLight<TinyLight<GreenLight>>(Vec(81, 167+BOTTOM_VDIST), module, Britix::LIGHTS2_1));
-	addChild(createLight<TinyLight<GreenLight>>(Vec(111, 167+BOTTOM_VDIST), module, Britix::LIGHTS2_2));
-	addChild(createLight<TinyLight<GreenLight>>(Vec(141, 167+BOTTOM_VDIST), module, Britix::LIGHTS2_3));
+	addChild(ModuleLightWidget::create<TinyLight<GreenLight>>(Vec(81, 167+BOTTOM_VDIST), module, Britix::LIGHTS2_1));
+	addChild(ModuleLightWidget::create<TinyLight<GreenLight>>(Vec(111, 167+BOTTOM_VDIST), module, Britix::LIGHTS2_2));
+	addChild(ModuleLightWidget::create<TinyLight<GreenLight>>(Vec(141, 167+BOTTOM_VDIST), module, Britix::LIGHTS2_3));
 }
+
+Model *modelBritix = Model::create<Britix, BritixWidget>("LOGinstruments", "Britix", "Matrix Modulator", LOGIC_TAG, MIXER_TAG, UTILITY_TAG);

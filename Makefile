@@ -1,16 +1,10 @@
 SLUG = LOGinstruments
-VERSION = 0.5.5
+VERSION = 0.6.0dev
 
-SOURCES = $(wildcard src/*.cpp)
+SOURCES += $(wildcard src/*.cpp)
 SOURCES += $(wildcard src/*.c)
 
+DISTRIBUTABLES += $(wildcard LICENSE*) res
 
-include ../../plugin.mk
-
-
-dist: all
-	mkdir -p dist/$(SLUG)
-	cp LICENSE* dist/$(SLUG)/
-	cp $(TARGET) dist/$(SLUG)/
-	cp -R res dist/$(SLUG)/
-	cd dist && zip -5 -r $(SLUG)-$(VERSION)-$(ARCH).zip $(SLUG)
+RACK_DIR ?= ../..
+include $(RACK_DIR)/plugin.mk
