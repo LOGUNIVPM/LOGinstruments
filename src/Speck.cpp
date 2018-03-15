@@ -507,9 +507,9 @@ SpeckWidget::SpeckWidget(Speck *module) : ModuleWidget(module) {
 		addChild(display);
 	}
 
-	addParam(ParamWidget::create<RoundSmallBlackSnapKnob>(Vec(118, 244), module, Speck::SCALE_1_PARAM, -10.0, 20.0, -1.0));
+	addParam(ParamWidget::create<RoundBlackSnapKnob>(Vec(118, 244), module, Speck::SCALE_1_PARAM, -10.0, 20.0, -1.0));
 	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(118, 297), module, Speck::POS_1_PARAM, -1.0, 1.0, 0.0));
-	addParam(ParamWidget::create<RoundSmallBlackSnapKnob>(Vec(167, 244), module, Speck::SCALE_2_PARAM, -10.0, 20.0, -1.0));
+	addParam(ParamWidget::create<RoundBlackSnapKnob>(Vec(167, 244), module, Speck::SCALE_2_PARAM, -10.0, 20.0, -1.0));
 	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(167, 297), module, Speck::POS_2_PARAM, -1.0, 1.0, 0.0));
 	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(213, 244), module, Speck::ZOOM_PARAM, 1.0, ZOOM_RANGE, 1.0));
 	addParam(ParamWidget::create<CKD6>(Vec(258, 244), module, Speck::LINLOG_PARAM, 0.0, 1.0, 0.0));
