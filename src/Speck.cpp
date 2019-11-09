@@ -1,10 +1,5 @@
-#include <string.h>
-#include <complex.h>
-#include <math.h>
-#include <float.h>
 #include "LOGinstruments.hpp"
 #include "kiss_fft.h"
-#include "dsp/digital.hpp"
 
 /*
  * FFT SCOPE, BASED ON SCOPE
@@ -71,36 +66,46 @@ struct Speck : Module {
 	int bufferIndex = 0;
 	float frameIndex = 0;
 
-	SchmittTrigger linLogTrig;
-	SchmittTrigger onOffTrig;
+	dsp::SchmittTrigger linLogTrig;
+	dsp::SchmittTrigger onOffTrig;
 	bool forceOff = false;
 	bool linLog = false; // lin = 0, log = 1
 	bool onOff = false;
 	kiss_fft_cfg cfg_for_FFT, cfg_for_IFFT;
 	float HannW[BUFFER_SIZE];
 
-	Speck() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {
+	Speck() {
+		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
+		configParam(SCALE_1_PARAM, -10.0, 20.0, -1.0);
+		configParam(POS_1_PARAM, -1.0, 1.0, 0.0);
+		configParam(SCALE_2_PARAM, -10.0, 20.0, -1.0);
+		configParam(POS_2_PARAM, -1.0, 1.0, 0.0);
+		configParam(ZOOM_PARAM, 1.0, ZOOM_RANGE, 1.0);
+		configParam(LINLOG_PARAM, 0.0, 1.0, 0.0);
+		configParam(FOFFS_PARAM, 0.0, FOFFS_RANGE, 0.0);
+		configParam(ONOFF_PARAM, 0.0, 1.0, 0.0);
+
 		cfg_for_FFT = kiss_fft_alloc( FFT_POINTS, DIR_FFT, 0, 0 );
 		cfg_for_IFFT = kiss_fft_alloc( FFT_POINTS, INV_FFT, 0, 0 );
 		//HannW = NULL;
 		HannWindow(&HannW[0], BUFFER_SIZE);
 	}
 	~Speck();
-	void step() override;
+	void process(const ProcessArgs &args) override;
 
-	json_t *toJson() override {
+	json_t *dataToJson() override {
 		json_t *rootJ = json_object();
 		json_object_set_new(rootJ, "linLog", json_integer((int) linLog));
 		return rootJ;
 	}
 
-	void fromJson(json_t *rootJ) override {
+	void dataFromJson(json_t *rootJ) override {
 		json_t *sumJ = json_object_get(rootJ, "linLog");
 		if (sumJ)
 			linLog = json_integer_value(sumJ);
 	}
 
-	void reset() override {
+	void onReset() override {
 		linLog = false;
 		onOff = false;
 	}
@@ -111,15 +116,15 @@ Speck::~Speck() {
 	free(cfg_for_IFFT);
 }
 
-void Speck::step() {
+void Speck::process(const ProcessArgs &args) {
 	int n;
 	kiss_fft_cpx cBufIn[FFT_POINTS], cBufOut[FFT_POINTS];
 	// Modes
-    if (onOffTrig.process(params[ONOFF_PARAM].value)) {
+    if (onOffTrig.process(params[ONOFF_PARAM].getValue())) {
     	forceOff = !forceOff;
     }
 
-    if (inputs[INPUT_1].active || inputs[INPUT_2].active)  {
+    if (inputs[INPUT_1].isConnected() || inputs[INPUT_2].isConnected())  {
     	if (onOff == false && forceOff == false) {
     		onOff = true;
     	} else if (onOff == true && forceOff == true) {
@@ -131,33 +136,33 @@ void Speck::step() {
     }
     lights[LIGHTS_2_ON].value = onOff;
 
-    if (linLogTrig.process(params[LINLOG_PARAM].value)) {
+    if (linLogTrig.process(params[LINLOG_PARAM].getValue())) {
             linLog = !linLog;
     }
     lights[LIGHTS_0_LIN].value = linLog ? 0.0 : 1.0;
     lights[LIGHTS_1_LOG].value = linLog ? 1.0 : 0.0;
 
     // copy in to out
-    if (outputs[OUTPUT_1].active) {
-    	outputs[OUTPUT_1].value = (inputs[INPUT_1].value);
+    if (outputs[OUTPUT_1].isConnected()) {
+    	outputs[OUTPUT_1].setVoltage((inputs[INPUT_1].getVoltage()));
     }
-    if (outputs[OUTPUT_2].active) {
-    	outputs[OUTPUT_2].value = (inputs[INPUT_2].value);
+    if (outputs[OUTPUT_2].isConnected()) {
+    	outputs[OUTPUT_2].setVoltage((inputs[INPUT_2].getVoltage()));
     }
 
 
 	// Compute time
 	if (onOff) {
 		//float deltaTime = powf(2.0, -14.0); // this could be the NFFT in the future (if rounded to nearest 2^N)
-		//int frameCount = (int)ceilf(deltaTime * engineGetSampleRate());
+		//int frameCount = (int)ceilf(deltaTime * args.sampleRate);
 		int frameCount = 1;
 
 		// Add frame to buffer
 		if (bufferIndex < BUFFER_SIZE) {
 			if (++frameIndex > frameCount) {
 				frameIndex = 0;
-				buffer1[bufferIndex] = (inputs[INPUT_1].value);
-				buffer2[bufferIndex] = (inputs[INPUT_2].value);
+				buffer1[bufferIndex] = (inputs[INPUT_1].getVoltage());
+				buffer2[bufferIndex] = (inputs[INPUT_2].getVoltage());
 				bufferIndex++;
 			}
 		} else {
@@ -192,7 +197,7 @@ void Speck::step() {
 
 
 struct SpeckDisplay : TransparentWidget {
-	Speck *module;
+	Speck *module = NULL;
 	int frame = 0;
 	std::shared_ptr<Font> font;
 
@@ -228,30 +233,30 @@ struct SpeckDisplay : TransparentWidget {
 			}
 #endif
 
-			peakx = engineGetSampleRate()/2.0 * ((float)(peakx) / (float)(FFT_POINTS_NYQ));
+			peakx = 0.5f * APP->engine->getSampleRate()/2.0 * ((float)(peakx) / (float)(FFT_POINTS_NYQ));
 			f0 = peakx; // todo calculate the real f0
 		}
 	};
 	Stats stats1, stats2;
 
 	SpeckDisplay() {
-		font = Font::load(assetPlugin(plugin, "res/DejaVuSansMono.ttf"));
+		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/DejaVuSansMono.ttf"));
 	}
 
 	#define LOG_LOWER_FREQ 10.0 // lowest freq we are going to show in log mode
-	float drawWaveform(NVGcontext *vg, float *values, float gain, float offset, float fzoom, float foffs, bool linLog) {
+	float drawWaveform(const DrawArgs &args, float *values, float gain, float offset, float fzoom, float foffs, bool linLog) {
 		int xpos;
-		float nyq = engineGetSampleRate() / 2.0;
+		float nyq = APP->engine->getSampleRate() / 2.0;
 		float logMax = log10(nyq);
 		float semilogx[FFT_POINTS_NYQ];
 		float vgrid[100];
 		float negOffs;
 		int maxj = 0;
 		Vec p;
-		nvgSave(vg);
+		nvgSave(args.vg);
 		Rect b = Rect(Vec(0, 15), box.size.minus(Vec(0, 15*2)));
-		nvgScissor(vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
-		nvgBeginPath(vg);
+		nvgScissor(args.vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
+		nvgBeginPath(args.vg);
 		// Draw maximum display left to right
 		int lwp = 0; // lowest point to show
 		int spacing = (nyq/FFT_POINTS_NYQ);
@@ -300,9 +305,9 @@ struct SpeckDisplay : TransparentWidget {
 				p = Vec(b.pos.x + fzoom*(((semilogx[i])-semilogx[lwp]) + negOffs), b.pos.y + b.size.y * (1-value)/2);
 
 				if (i <= lwp)
-					nvgMoveTo(vg, p.x, p.y);
+					nvgMoveTo(args.vg, p.x, p.y);
 				else
-					nvgLineTo(vg, p.x, p.y);
+					nvgLineTo(args.vg, p.x, p.y);
 			}
 
 		} else {
@@ -315,19 +320,19 @@ struct SpeckDisplay : TransparentWidget {
 				p = Vec(b.pos.x + xpos * b.size.x / (zoomPoints/*FFT_POINTS_NYQ*/-1), b.pos.y + b.size.y * (1 - value) / 2);
 
 				if (i == 0)
-					nvgMoveTo(vg, p.x, p.y);
+					nvgMoveTo(args.vg, p.x, p.y);
 				else
-					nvgLineTo(vg, p.x, p.y);
+					nvgLineTo(args.vg, p.x, p.y);
 			}
 		}
 		//printf("xpos %d, bsize %f, zoomPts %d, bpos %f, x %f\n", xpos, b.size.x, zoomPoints, b.pos.x, p.x);
-		nvgLineCap(vg, NVG_ROUND);
-		nvgMiterLimit(vg, 2.0);
-		nvgStrokeWidth(vg, 1.75);
-		nvgGlobalCompositeOperation(vg, NVG_LIGHTER);
-		nvgStroke(vg);
-		nvgResetScissor(vg);
-		nvgRestore(vg);
+		nvgLineCap(args.vg, NVG_ROUND);
+		nvgMiterLimit(args.vg, 2.0);
+		nvgStrokeWidth(args.vg, 1.75);
+		nvgGlobalCompositeOperation(args.vg, NVG_LIGHTER);
+		nvgStroke(args.vg);
+		nvgResetScissor(args.vg);
+		nvgRestore(args.vg);
 
 		if (linLog) {
 
@@ -335,14 +340,14 @@ struct SpeckDisplay : TransparentWidget {
 			for (int j = 0; j < maxj; j++) {
 
 				Vec p = Vec(b.pos.x + fzoom*(vgrid[j] - vgrid[0]+ negOffs), box.size.y);
-				nvgStrokeColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0x10));
+				nvgStrokeColor(args.vg, nvgRGBA(0xff, 0xff, 0xff, 0x10));
 				{
-					nvgBeginPath(vg);
-					nvgMoveTo(vg, p.x, p.y);
-					nvgLineTo(vg, p.x, 0);
-					nvgClosePath(vg);
+					nvgBeginPath(args.vg);
+					nvgMoveTo(args.vg, p.x, p.y);
+					nvgLineTo(args.vg, p.x, 0);
+					nvgClosePath(args.vg);
 				}
-				nvgStroke(vg);
+				nvgStroke(args.vg);
 			}
 		}
 
@@ -351,10 +356,10 @@ struct SpeckDisplay : TransparentWidget {
 
 #define VERT_GRID_DIST 20
 #define HORZ_GRID_DIST 20
-	void drawGrid(NVGcontext *vg, float fzoom, float foffs, bool linLog, float negOffs) {
+	void drawGrid(const DrawArgs &args, float fzoom, float foffs, bool linLog, float negOffs) {
 		Rect b = Rect(Vec(0, 15), box.size.minus(Vec(0, 15*2)));
-		nvgScissor(vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
-		float nyq = engineGetSampleRate() / 2.0;
+		nvgScissor(args.vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
+		float nyq = APP->engine->getSampleRate() / 2.0;
 		float range = nyq / (fzoom < 1.0 ? 1.0 : fzoom);
 		float fstart = foffs * (nyq - range);
 		int first = ceil(fstart / 1000) * 1000;
@@ -365,107 +370,111 @@ struct SpeckDisplay : TransparentWidget {
 			for (int f = first; f < first+range; f+=1000) {
 				float v = ((f-first+diff) / range) * box.size.x;
 				Vec p = Vec(v, box.size.y);
-				nvgStrokeColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0x10));
+				nvgStrokeColor(args.vg, nvgRGBA(0xff, 0xff, 0xff, 0x10));
 				{
-					nvgBeginPath(vg);
-					nvgMoveTo(vg, p.x, p.y);
-					nvgLineTo(vg, p.x, 0);
-					nvgClosePath(vg);
+					nvgBeginPath(args.vg);
+					nvgMoveTo(args.vg, p.x, p.y);
+					nvgLineTo(args.vg, p.x, 0);
+					nvgClosePath(args.vg);
 				}
-				nvgStroke(vg);
+				nvgStroke(args.vg);
 			}
 		} else { ; } // is done in the drawWaveform for convenience
 
 		// HORZ LINES
 		for (int h = 0; h < box.size.y; h+= HORZ_GRID_DIST) {
 			Vec p = Vec(box.size.x, h);
-			nvgStrokeColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0x10));
+			nvgStrokeColor(args.vg, nvgRGBA(0xff, 0xff, 0xff, 0x10));
 			{
-				nvgBeginPath(vg);
-				nvgMoveTo(vg, p.x, p.y);
-				nvgLineTo(vg, 0, p.y);
-				nvgClosePath(vg);
+				nvgBeginPath(args.vg);
+				nvgMoveTo(args.vg, p.x, p.y);
+				nvgLineTo(args.vg, 0, p.y);
+				nvgClosePath(args.vg);
 			}
-			nvgStroke(vg);
+			nvgStroke(args.vg);
 		}
 	}
 
-/*	void drawTrig(NVGcontext *vg, float value, float gain, float offset) {
+/*	void drawTrig(const DrawArgs &args, float value, float gain, float offset) {
 		Rect b = Rect(Vec(0, 15), box.size.minus(Vec(0, 15*2)));
-		nvgScissor(vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
+		nvgScissor(args.args.vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
 
 		value = value * gain + offset;
 		Vec p = Vec(box.size.x, b.pos.y + b.size.y * (1 - value) / 2);
 
 		// Draw line
-		nvgStrokeColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0x10));
+		nvgStrokeColor(args.args.vg, nvgRGBA(0xff, 0xff, 0xff, 0x10));
 		{
-			nvgBeginPath(vg);
-			nvgMoveTo(vg, p.x - 13, p.y);
-			nvgLineTo(vg, 0, p.y);
-			nvgClosePath(vg);
+			nvgBeginPath(args.args.vg);
+			nvgMoveTo(args.args.vg, p.x - 13, p.y);
+			nvgLineTo(args.args.vg, 0, p.y);
+			nvgClosePath(args.args.vg);
 		}
-		nvgStroke(vg);
+		nvgStroke(args.args.vg);
 
 		// Draw indicator
-		nvgFillColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0x60));
+		nvgFillColor(args.args.vg, nvgRGBA(0xff, 0xff, 0xff, 0x60));
 		{
-			nvgBeginPath(vg);
-			nvgMoveTo(vg, p.x - 2, p.y - 4);
-			nvgLineTo(vg, p.x - 9, p.y - 4);
-			nvgLineTo(vg, p.x - 13, p.y);
-			nvgLineTo(vg, p.x - 9, p.y + 4);
-			nvgLineTo(vg, p.x - 2, p.y + 4);
-			nvgClosePath(vg);
+			nvgBeginPath(args.args.vg);
+			nvgMoveTo(args.args.vg, p.x - 2, p.y - 4);
+			nvgLineTo(args.args.vg, p.x - 9, p.y - 4);
+			nvgLineTo(args.args.vg, p.x - 13, p.y);
+			nvgLineTo(args.args.vg, p.x - 9, p.y + 4);
+			nvgLineTo(args.args.vg, p.x - 2, p.y + 4);
+			nvgClosePath(args.args.vg);
 		}
-		nvgFill(vg);
+		nvgFill(args.args.vg);
 
-		nvgFontSize(vg, 8);
-		nvgFontFaceId(vg, font->handle);
-		nvgFillColor(vg, nvgRGBA(0x1e, 0x28, 0x2b, 0xff));
-		nvgText(vg, p.x - 8, p.y + 3, "T", NULL);
-		nvgResetScissor(vg);
+		nvgFontSize(args.args.vg, 8);
+		nvgFontFaceId(args.args.vg, font->handle);
+		nvgFillColor(args.args.vg, nvgRGBA(0x1e, 0x28, 0x2b, 0xff));
+		nvgText(args.args.vg, p.x - 8, p.y + 3, "T", NULL);
+		nvgResetScissor(args.args.vg);
 	}*/
 
-	void drawStats(NVGcontext *vg, Vec pos, const char *title, Stats *stats) {
-		nvgFontSize(vg, 10);
-		nvgFontFaceId(vg, font->handle);
-		nvgTextLetterSpacing(vg, -2);
+	void drawStats(const DrawArgs &args, Vec pos, const char *title, Stats *stats) {
+		nvgFontSize(args.vg, 10);
+		nvgFontFaceId(args.vg, font->handle);
+		nvgTextLetterSpacing(args.vg, -2);
 
-		nvgFillColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0xff));
-		nvgText(vg, pos.x + 5, pos.y + 10, title, NULL);
+		nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0xff, 0xff));
+		nvgText(args.vg, pos.x + 5, pos.y + 10, title, NULL);
 
-		nvgFillColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0x80));
+		nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0xff, 0x80));
 		char text[128];
 		snprintf(text, sizeof(text), /*"F0 %5.2f  */"PeakX %5.1f  PeakY % 5.1f", /*stats->f0, */stats->peakx, stats->peaky);
 		//printf("%s\n", text);
-		nvgText(vg, pos.x + 17, pos.y + 10, text, NULL);
+		nvgText(args.vg, pos.x + 17, pos.y + 10, text, NULL);
 	}
 
-	void draw(NVGcontext *vg) override {
-		float gain1 = powf(2.0, roundf(module->params[Speck::SCALE_1_PARAM].value)) / 12.0;
-		float gain2 = powf(2.0, roundf(module->params[Speck::SCALE_2_PARAM].value)) / 12.0;
-		float pos1 = module->params[Speck::POS_1_PARAM].value;
-		float pos2 = module->params[Speck::POS_2_PARAM].value;
-		float zoom = module->params[Speck::ZOOM_PARAM].value;
-		float freqOffs = module->params[Speck::FOFFS_PARAM].value;
+	void draw(const DrawArgs &args) override {
+
+		if (module == NULL)
+			return;
+
+		float gain1 = powf(2.0, roundf(module->params[Speck::SCALE_1_PARAM].getValue())) / 12.0;
+		float gain2 = powf(2.0, roundf(module->params[Speck::SCALE_2_PARAM].getValue())) / 12.0;
+		float pos1 = module->params[Speck::POS_1_PARAM].getValue();
+		float pos2 = module->params[Speck::POS_2_PARAM].getValue();
+		float zoom = module->params[Speck::ZOOM_PARAM].getValue();
+		float freqOffs = module->params[Speck::FOFFS_PARAM].getValue();
 		float negOffs;
 
 		// Draw waveforms
 		// Y
-		if (module->inputs[Speck::INPUT_2].active) {
-			nvgStrokeColor(vg, nvgRGBA(0x0E, 0x99, 0x00, 0xA0));
-			//drawWaveform(vg, module->buffer2, gain2, pos2);
-			negOffs = drawWaveform(vg, module->FFT2, gain2, pos2, zoom, freqOffs, module->linLog);
+		if (module->inputs[Speck::INPUT_2].isConnected()) {
+			nvgStrokeColor(args.vg, nvgRGBA(0x0E, 0x99, 0x00, 0xA0));
+			//drawWaveform(args.args.vg, module->buffer2, gain2, pos2);
+			negOffs = drawWaveform(args, module->FFT2, gain2, pos2, zoom, freqOffs, module->linLog);
 		}
 
 		// X
-		if (module->inputs[Speck::INPUT_1].active) {
-			nvgStrokeColor(vg, nvgRGBA(0xF4, 0x51, 0x00, 0xA0));
-			//drawWaveform(vg, module->buffer1, gain1, pos1);
-			negOffs = drawWaveform(vg, module->FFT1, gain1, pos1, zoom, freqOffs, module->linLog);
+		if (module->inputs[Speck::INPUT_1].isConnected()) {
+			nvgStrokeColor(args.vg, nvgRGBA(0xF4, 0x51, 0x00, 0xA0));
+			//drawWaveform(args.args.vg, module->buffer1, gain1, pos1);
+			negOffs = drawWaveform(args, module->FFT1, gain1, pos1, zoom, freqOffs, module->linLog);
 		}
-		//drawTrig(vg, module->params[Speck::TRIG_PARAM], gain1, pos1);
+		//drawTrig(args.args.vg, module->params[Speck::TRIG_PARAM], gain1, pos1);
 
 		// Calculate and draw stats
 		if (++frame >= 4) {
@@ -473,9 +482,9 @@ struct SpeckDisplay : TransparentWidget {
 			stats1.calculate(module->FFT1);
 			stats2.calculate(module->FFT2);
 		}
-		drawStats(vg, Vec(0, 0), "IN1", &stats1);
-		drawStats(vg, Vec(0, box.size.y - 15), "IN2", &stats2);
-		drawGrid(vg, zoom, freqOffs, module->linLog, negOffs);
+		drawStats(args, Vec(0, 0), "IN1", &stats1);
+		drawStats(args, Vec(0, box.size.y - 15), "IN2", &stats2);
+		drawGrid(args, zoom, freqOffs, module->linLog, negOffs);
 	}
 };
 
@@ -484,21 +493,11 @@ struct SpeckWidget : ModuleWidget {
 	SpeckWidget(Speck *module);
 };
 
-SpeckWidget::SpeckWidget(Speck *module) : ModuleWidget(module) {
+SpeckWidget::SpeckWidget(Speck *module) {
+	setModule(module);
+	setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/Speck_nofonts2.svg")));
 	box.size = Vec(15*20, 380);
 
-	{
-		SVGPanel *panel = new SVGPanel();
-		panel->box.size = box.size;
-		panel->setBackground(SVG::load(assetPlugin(plugin, "res/Speck_nofonts2.svg")));
-		addChild(panel);
-	}
-/*
-	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
-	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
-	addChild(Widget::create<ScrewSilver>(Vec(15, 365)));
-	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 365)));
-*/
 	{
 		SpeckDisplay *display = new SpeckDisplay();
 		display->module = module;
@@ -507,25 +506,25 @@ SpeckWidget::SpeckWidget(Speck *module) : ModuleWidget(module) {
 		addChild(display);
 	}
 
-	addParam(ParamWidget::create<RoundBlackSnapKnob>(Vec(118, 244), module, Speck::SCALE_1_PARAM, -10.0, 20.0, -1.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(118, 297), module, Speck::POS_1_PARAM, -1.0, 1.0, 0.0));
-	addParam(ParamWidget::create<RoundBlackSnapKnob>(Vec(167, 244), module, Speck::SCALE_2_PARAM, -10.0, 20.0, -1.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(167, 297), module, Speck::POS_2_PARAM, -1.0, 1.0, 0.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(213, 244), module, Speck::ZOOM_PARAM, 1.0, ZOOM_RANGE, 1.0));
-	addParam(ParamWidget::create<CKD6>(Vec(258, 244), module, Speck::LINLOG_PARAM, 0.0, 1.0, 0.0));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(213, 297), module, Speck::FOFFS_PARAM, 0.0, FOFFS_RANGE, 0.0));
-	addParam(ParamWidget::create<CKD6>(Vec(239, 12), module, Speck::ONOFF_PARAM, 0.0, 1.0, 0.0));
+	addParam(createParam<RoundBlackSnapKnob>(Vec(118, 244), module, Speck::SCALE_1_PARAM));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(118, 297), module, Speck::POS_1_PARAM));
+	addParam(createParam<RoundBlackSnapKnob>(Vec(167, 244), module, Speck::SCALE_2_PARAM));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(167, 297), module, Speck::POS_2_PARAM));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(213, 244), module, Speck::ZOOM_PARAM));
+	addParam(createParam<CKD6>(Vec(258, 244), module, Speck::LINLOG_PARAM));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(213, 297), module, Speck::FOFFS_PARAM));
+	addParam(createParam<CKD6>(Vec(239, 12), module, Speck::ONOFF_PARAM));
 
-	addInput(Port::create<PJ301MPort>(Vec(12, 240), Port::INPUT, module, Speck::INPUT_1));
-	addInput(Port::create<PJ301MPort>(Vec(59, 240), Port::INPUT, module, Speck::INPUT_2));
+	addInput(createInput<PJ301MPort>(Vec(12, 240), module, Speck::INPUT_1));
+	addInput(createInput<PJ301MPort>(Vec(59, 240), module, Speck::INPUT_2));
 
-	addOutput(Port::create<PJ3410Port>(Vec(9, 306), Port::OUTPUT, module, Speck::OUTPUT_1));
-	addOutput(Port::create<PJ3410Port>(Vec(56, 306), Port::OUTPUT, module, Speck::OUTPUT_2));
+	addOutput(createOutput<PJ3410Port>(Vec(9, 306), module, Speck::OUTPUT_1));
+	addOutput(createOutput<PJ3410Port>(Vec(56, 306), module, Speck::OUTPUT_2));
 
-	addChild(ModuleLightWidget::create<TinyLight<GreenLight>>(Vec(286, 230), module, Speck::LIGHTS_0_LIN));
-	addChild(ModuleLightWidget::create<TinyLight<GreenLight>>(Vec(286, 280), module, Speck::LIGHTS_1_LOG));
-	addChild(ModuleLightWidget::create<TinyLight<GreenLight>>(Vec(265, 8), module, Speck::LIGHTS_2_ON));
+	addChild(createLight<TinyLight<GreenLight>>(Vec(286, 230), module, Speck::LIGHTS_0_LIN));
+	addChild(createLight<TinyLight<GreenLight>>(Vec(286, 280), module, Speck::LIGHTS_1_LOG));
+	addChild(createLight<TinyLight<GreenLight>>(Vec(265, 8), module, Speck::LIGHTS_2_ON));
 
 }
 
-Model *modelSpeck = Model::create<Speck, SpeckWidget>("LOGinstruments", "Speck", "Spectrum Analyzer", VISUAL_TAG, UTILITY_TAG);
+Model *modelSpeck = createModel<Speck, SpeckWidget>("Speck");

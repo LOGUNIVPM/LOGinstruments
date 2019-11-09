@@ -1,6 +1,3 @@
-SLUG = LOGinstruments
-VERSION = 0.6.0
-
 SOURCES += $(wildcard src/*.cpp)
 SOURCES += $(wildcard src/*.c)
 

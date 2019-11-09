@@ -1,20 +1,11 @@
 #include "LOGinstruments.hpp"
+#include "LOGgui.hpp"
 #include <random>
 #include <sys/time.h>
 
 #define POSITIVE_VOLTAGE 1.0
 #define NEGATIVE_VOLTAGE -1.0
 
-#define MIN(x, y) ((x) < (y) ? (x) : (y))
-#define MAX(x, y) ((x) > (y) ? (x) : (y))
-
-/*
-long int GetUsTimeStamp() {
-    struct timeval tv;
-    gettimeofday(&tv,NULL);
-    return tv.tv_usec;
-}
-*/
 
 struct velvet: Module {
 	enum ParamIds {
@@ -34,20 +25,28 @@ struct velvet: Module {
 		NUM_OUTPUTS
 	};
 
-	velvet() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, 0) {};
-	void step() override;
+	enum LightIds {
+		NUM_LIGHTS
+	};
+
+	velvet() {
+		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
+		configParam(RATE, 0.0, 1.0, 0.5);
+		configParam(ENERGY_MODE, 0.0, 1.0, 1.0);
+	};
+	void process(const ProcessArgs &args) override;
 };
 
-void velvet::step() {
+void velvet::process(const ProcessArgs &args) {
 
 	float thres = 0.0;
 
-	if (inputs[INPUT_RATE].active) {
-		thres = inputs[INPUT_RATE].value;
+	if (inputs[INPUT_RATE].isConnected()) {
+		thres = inputs[INPUT_RATE].getVoltage();
 	}
-	thres = MIN(MAX(thres + params[RATE].value, 0.0),1.0);
+	thres = clamp(thres + params[RATE].getValue(), 0.0, 1.0);
 
-	int mode = (int) params[ENERGY_MODE].value;
+	int mode = (int) params[ENERGY_MODE].getValue();
 	float weight = 1;
 	if (mode == 1) {
 		weight = (1 - thres) + 0.5;
@@ -66,25 +65,25 @@ void velvet::step() {
 	float r1 = dis(gen);
 	float r2 = dis(gen);
 #else
-	float r1 = static_cast <float> (randomUniform()) ;
-	float r2 = static_cast <float> (randomUniform()) ;
+	float r1 = (random::uniform()) ;
+	float r2 = (random::uniform()) ;
 #endif
 
 
-	if (outputs[VELVET_OUT].active) {
+	if (outputs[VELVET_OUT].isConnected()) {
 		if ( r1 <= thres ) {
 			if ( r2 >= 0.5 ) {
-				outputs[VELVET_OUT].value = weight * POSITIVE_VOLTAGE;
+				outputs[VELVET_OUT].setVoltage(weight * POSITIVE_VOLTAGE);
 			} else {
-				outputs[VELVET_OUT].value = weight * NEGATIVE_VOLTAGE;
+				outputs[VELVET_OUT].setVoltage(weight * NEGATIVE_VOLTAGE);
 			}
 		} else {
-			outputs[VELVET_OUT].value = 0.0;
+			outputs[VELVET_OUT].setVoltage(0.0);
 		}
 	}
 
-	if (outputs[WHITE_OUT].active)
-		outputs[WHITE_OUT].value = (r1 -0.5) * 10.0;
+	if (outputs[WHITE_OUT].isConnected())
+		outputs[WHITE_OUT].setVoltage((r1 -0.5) * 10.0);
 
 }
 
@@ -93,24 +92,20 @@ struct VelvetWidget : ModuleWidget {
 	VelvetWidget(velvet *module);
 };
 
-VelvetWidget::VelvetWidget(velvet *module) : ModuleWidget(module) {
-	box.size = Vec(15*10, 380);
+VelvetWidget::VelvetWidget(velvet *module) {
 
-	{
-		SVGPanel *panel = new SVGPanel();
-		panel->box.size = box.size;
-		panel->setBackground(SVG::load(assetPlugin(plugin, "res/velvet-nofonts.svg")));
-		addChild(panel);
-	}
+	setModule(module);
+	setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/velvet-nofonts.svg")));
 
-	addParam(ParamWidget::create<Davies1900hBlackKnob>(Vec(55, 95), module, velvet::RATE, 0.0, 1.0, 0.5));
-	addParam(ParamWidget::create<CKSS>(Vec(66, 200), module, velvet::ENERGY_MODE, 0.0, 1.0, 1.0));
 
-	addInput(Port::create<PJ301MPort>(Vec(8, 156), Port::INPUT, module, velvet::INPUT_RATE));
+	addParam(createParam<Davies1900hBlackKnob>(Vec(40, 100), module, velvet::RATE));
+	addParam(createParam<CKSS>(Vec(54, 240), module, velvet::ENERGY_MODE));
 
-	addOutput(Port::create<PJ3410Port>(Vec(30, 260), Port::OUTPUT, module, velvet::VELVET_OUT));
-	addOutput(Port::create<PJ3410Port>(Vec(90, 260), Port::OUTPUT, module, velvet::WHITE_OUT));
+	addInput(createInput<logPortIn>(Vec(6, 164), module, velvet::INPUT_RATE));
+
+	addOutput(createOutput<logPortOut>(Vec(5, 326), module, velvet::VELVET_OUT));
+	addOutput(createOutput<logPortOut>(Vec(93, 326), module, velvet::WHITE_OUT));
 }
 
 
-Model *modelVelvet = Model::create<velvet, VelvetWidget>("LOGinstruments", "Velvet", "Velvet Noise Gen", NOISE_TAG, RANDOM_TAG);
+Model *modelVelvet = createModel<velvet, VelvetWidget>("Velvet");
