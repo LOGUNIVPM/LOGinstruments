@@ -14,7 +14,7 @@
 #define FOFFS_RANGE 1.0
 #define ZOOM_RANGE 8.0
 
-float cabsf_LG(kiss_fft_cpx v) {
+float inline cabs(kiss_fft_cpx v) {
 	return sqrtf((float)(v.r*v.r + v.i*v.i));
 }
 
@@ -76,10 +76,10 @@ struct Speck : Module {
 
 	Speck() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configParam(SCALE_1_PARAM, -10.0, 20.0, -1.0);
-		configParam(POS_1_PARAM, -1.0, 1.0, 0.0);
-		configParam(SCALE_2_PARAM, -10.0, 20.0, -1.0);
-		configParam(POS_2_PARAM, -1.0, 1.0, 0.0);
+		configParam(SCALE_1_PARAM, -5.0, 5.0, -2.0);
+		configParam(POS_1_PARAM, -1.0, 1.0, -1.0);
+		configParam(SCALE_2_PARAM, -5.0, 5.0, -2.0);
+		configParam(POS_2_PARAM, -1.0, 1.0, -1.0);
 		configParam(ZOOM_PARAM, 1.0, ZOOM_RANGE, 1.0);
 		configParam(LINLOG_PARAM, 0.0, 1.0, 0.0);
 		configParam(FOFFS_PARAM, 0.0, FOFFS_RANGE, 0.0);
@@ -173,7 +173,7 @@ void Speck::process(const ProcessArgs &args) {
 			}
 			kiss_fft(cfg_for_FFT, cBufIn, cBufOut);
 			for ( n = 0; n < FFT_POINTS_NYQ; n++ ) {
-				FFT1[n] = logf(cabsf_LG(cBufOut[n]));
+				FFT1[n] = 20.f*log10(cabs(cBufOut[n]) + 1e-2);
 			}
 
 			for ( n = 0; n < FFT_POINTS; n++ ) {
@@ -182,7 +182,7 @@ void Speck::process(const ProcessArgs &args) {
 			}
 			kiss_fft(cfg_for_FFT, cBufIn, cBufOut);
 			for ( n = 0; n < FFT_POINTS_NYQ; n++ ) {
-				FFT2[n] = logf(cabsf_LG(cBufOut[n]));
+				FFT2[n] = 20.f*log10(cabs(cBufOut[n]) + 1e-2);
 			}
 			bufferIndex = 0; frameIndex = 0; // reset all. remove for future overlaps
 		}
