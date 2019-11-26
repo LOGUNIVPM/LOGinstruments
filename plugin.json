@@ -1,6 +1,7 @@
 {
   "slug": "LOGinstruments",
   "name": "LOGinstruments",
+  "brand": "LOGinstruments",
   "version": "1.0.0",
   "license": "BSD-3-Clause",
   "author": "L.Gabrielli",
@@ -32,7 +33,7 @@
       "name": "Velvet",
       "description": "Velvet Noise generator",
       "tags": [
-        "Noise,Random"
+        "Noise","Random"
       ]
     },
     {
