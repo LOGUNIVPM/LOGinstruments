@@ -496,7 +496,6 @@ struct SpeckWidget : ModuleWidget {
 SpeckWidget::SpeckWidget(Speck *module) {
 	setModule(module);
 	setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/Speck_nofonts2.svg")));
-	box.size = Vec(15*20, 380);
 
 	{
 		SpeckDisplay *display = new SpeckDisplay();
