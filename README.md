@@ -1,5 +1,7 @@
 # LOGinstruments
-LOGinstruments v1: VCV Rack plugins by Leonardo Gabrielli <l.gabrielli@univpm.it>
+LOGinstruments v2: VCV Rack plugins by Leonardo Gabrielli <l.gabrielli@univpm.it>
+
+These plugins are ready for Rack v2.
 
 ![family portrait](/res/familyPortrait.png?raw=true "LOGinstruments modules")
 
