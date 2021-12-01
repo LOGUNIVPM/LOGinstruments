@@ -36,8 +36,6 @@ struct LessMess : Module {
 	json_t *dataToJson() override;
 	void dataFromJson(json_t*) override;
 
-	LessMessWidget * parent;
-
 };
 
 void LessMess::process(const ProcessArgs &args) {
@@ -50,10 +48,8 @@ void LessMess::process(const ProcessArgs &args) {
 
 #define V_SEP 35
 struct LessMessWidget : ModuleWidget {
-	TextField ** label;
+	TextField ** txtField;
 	LessMessWidget(LessMess *module);
-	json_t *dataToJson();
-	void dataFromJson(json_t *rootJ);
 };
 
 LessMessWidget::LessMessWidget(LessMess *module) {
@@ -62,17 +58,21 @@ LessMessWidget::LessMessWidget(LessMess *module) {
 	if (module) {
 		module->widget = this;
 	}
-	label = new TextField*[LessMess::NUM_INPUTS];
+	
+	txtField = new TextField*[LessMess::NUM_INPUTS];
 	setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/LessMess_nofonts.svg")));
 	box.size = Vec(15*16, 380);
 
 	for (int i = 0; i < LessMess::NUM_INPUTS; i++) {
 		addInput(createInput<logPortIn>(Vec(10, 40 + i*V_SEP), module, i));
 
-		label[i] = new TextField();
-		label[i]->box.pos = Vec(40, 42 + i * V_SEP);
-		label[i]->box.size.x = box.size.x-75;
-		addChild(label[i]);
+		txtField[i] = new TextField();
+		txtField[i]->box.pos = Vec(40, 42 + i * V_SEP);
+		txtField[i]->box.size.x = box.size.x-75;
+		if (module) {
+			txtField[i]->setText(module->labels[i]);
+		}
+		addChild(txtField[i]);
 
 		addOutput(createOutput<logPortOut>(Vec(box.size.x-30, 40 + i * V_SEP), module, i));
 	}
@@ -86,7 +86,7 @@ json_t *LessMess::dataToJson() {
 	std::string tmps;
 
 	for (int i = 0; i < NUM_ROWS; i++) {
-		tmps = widget->label[i]->text;
+		tmps = widget->txtField[i]->getText();
 		json_object_set_new(rootJ, ("label" + std::to_string(i)).c_str(), json_string( tmps.c_str() ));
 	}
 	return rootJ;
@@ -97,7 +97,7 @@ void LessMess::dataFromJson(json_t *rootJ) {
 	for (int i = 0; i < NUM_ROWS; i++) {
 		json_t *labJ = json_object_get(rootJ, ("label" + std::to_string(i)).c_str());
 		if (labJ) {
-			widget->label[i]->text = json_string_value(labJ);
+			labels[i] = json_string_value(labJ);
 		}
 	}
 }
