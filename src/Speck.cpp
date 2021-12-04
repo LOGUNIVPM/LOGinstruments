@@ -239,9 +239,7 @@ struct SpeckDisplay : TransparentWidget {
 	};
 	Stats stats1, stats2;
 
-	SpeckDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/DejaVuSansMono.ttf"));
-	}
+	SpeckDisplay() { ; }
 
 	#define LOG_LOWER_FREQ 10.0 // lowest freq we are going to show in log mode
 	float drawWaveform(const DrawArgs &args, float *values, float gain, float offset, float fzoom, float foffs, bool linLog) {
@@ -433,18 +431,21 @@ struct SpeckDisplay : TransparentWidget {
 	}*/
 
 	void drawStats(const DrawArgs &args, Vec pos, const char *title, Stats *stats) {
+		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/DejaVuSansMono.ttf"));
+
+		if (font == NULL) return;
+
 		nvgFontSize(args.vg, 10);
 		nvgFontFaceId(args.vg, font->handle);
-		nvgTextLetterSpacing(args.vg, -2);
+		nvgTextLetterSpacing(args.vg, 0);
 
-		nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0xff, 0xff));
+		nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0xff, 0x80));
 		nvgText(args.vg, pos.x + 5, pos.y + 10, title, NULL);
 
 		nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0xff, 0x80));
 		char text[128];
-		snprintf(text, sizeof(text), /*"F0 %5.2f  */"PeakX %5.1f  PeakY % 5.1f", /*stats->f0, */stats->peakx, stats->peaky);
-		//printf("%s\n", text);
-		nvgText(args.vg, pos.x + 17, pos.y + 10, text, NULL);
+		snprintf(text, sizeof(text), "Peak f: %5.1f - amp: % 5.1f", stats->peakx, stats->peaky);
+		nvgText(args.vg, pos.x + 30, pos.y + 10, text, NULL);
 	}
 
 	void draw(const DrawArgs &args) override {
@@ -482,8 +483,8 @@ struct SpeckDisplay : TransparentWidget {
 			stats1.calculate(module->FFT1);
 			stats2.calculate(module->FFT2);
 		}
-		drawStats(args, Vec(0, 0), "IN1", &stats1);
-		drawStats(args, Vec(0, box.size.y - 15), "IN2", &stats2);
+		drawStats(args, Vec(0, 0), "IN1: ", &stats1);
+		drawStats(args, Vec(0, box.size.y - 15), "IN2: ", &stats2);
 		drawGrid(args, zoom, freqOffs, module->linLog, negOffs);
 	}
 };
