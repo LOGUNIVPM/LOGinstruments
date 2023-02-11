@@ -26,7 +26,7 @@ void HannWindow(float *w, int size) {
 	}
 
 	for (int i = 0; i < size; i++) {
-	    w[i] = 0.5 * (1 - cos(2*M_PI*i / (size-1))); // maybe double is better?
+	    w[i] = 0.5 * (1 - cos(2*M_PI*i / (size-1)));
 	}
 }
 
@@ -64,7 +64,6 @@ struct Speck : Module {
 	float FFT1[FFT_POINTS_NYQ] = {}; // poi cambiare il numero di punti in maniera arbitraria
 	float FFT2[FFT_POINTS_NYQ] = {};
 	int bufferIndex = 0;
-	float frameIndex = 0;
 
 	dsp::SchmittTrigger linLogTrig;
 	dsp::SchmittTrigger onOffTrig;
@@ -153,18 +152,12 @@ void Speck::process(const ProcessArgs &args) {
 
 	// Compute time
 	if (onOff) {
-		//float deltaTime = powf(2.0, -14.0); // this could be the NFFT in the future (if rounded to nearest 2^N)
-		//int frameCount = (int)ceilf(deltaTime * args.sampleRate);
-		int frameCount = 1;
 
 		// Add frame to buffer
 		if (bufferIndex < BUFFER_SIZE) {
-			if (++frameIndex > frameCount) {
-				frameIndex = 0;
-				buffer1[bufferIndex] = (inputs[INPUT_1].getVoltage());
-				buffer2[bufferIndex] = (inputs[INPUT_2].getVoltage());
-				bufferIndex++;
-			}
+			buffer1[bufferIndex] = (inputs[INPUT_1].getVoltage());
+			buffer2[bufferIndex] = (inputs[INPUT_2].getVoltage());
+			bufferIndex++;
 		} else {
 			// TIME TO COMPUTE FFT
 			for ( n = 0; n < FFT_POINTS; n++ ) {
@@ -184,14 +177,8 @@ void Speck::process(const ProcessArgs &args) {
 			for ( n = 0; n < FFT_POINTS_NYQ; n++ ) {
 				FFT2[n] = 20.f*log10(cabs(cBufOut[n]) + 1e-2);
 			}
-			bufferIndex = 0; frameIndex = 0; // reset all. remove for future overlaps
+			bufferIndex = 0;
 		}
-		/*
-		// Reset buffer
-		if (bufferIndex >= BUFFER_SIZE) {
-			bufferIndex = 0; frameIndex = 0; return;
-		}
-		*/
 	}
 }
 
@@ -289,14 +276,7 @@ struct SpeckDisplay : TransparentWidget {
 
 			float residual = semilogx[FFT_POINTS_NYQ-1] - (semilogx[FFT_POINTS_NYQ-1]/fzoom); // excluded from plot
 			negOffs = - (0.8*foffs / FOFFS_RANGE) * residual;
-/*
-			for (int i = 0; i < FFT_POINTS_NYQ; i++) {
-				semilogx[i] = negOffs + semilogx[i]; // apply the range of the box TODO togliere?
-			}
-			for (int j = 0; j < maxj; j++) {
-				vgrid[j] += negOffs;
-			}
-*/
+
 			for (int i = lwp; i < FFT_POINTS_NYQ; i++) {
 				float value = values[i] * gain + offset;
 
@@ -323,7 +303,6 @@ struct SpeckDisplay : TransparentWidget {
 					nvgLineTo(args.vg, p.x, p.y);
 			}
 		}
-		//printf("xpos %d, bsize %f, zoomPts %d, bpos %f, x %f\n", xpos, b.size.x, zoomPoints, b.pos.x, p.x);
 		nvgLineCap(args.vg, NVG_ROUND);
 		nvgMiterLimit(args.vg, 2.0);
 		nvgStrokeWidth(args.vg, 1.75);
@@ -393,43 +372,6 @@ struct SpeckDisplay : TransparentWidget {
 		}
 	}
 
-/*	void drawTrig(const DrawArgs &args, float value, float gain, float offset) {
-		Rect b = Rect(Vec(0, 15), box.size.minus(Vec(0, 15*2)));
-		nvgScissor(args.args.vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
-
-		value = value * gain + offset;
-		Vec p = Vec(box.size.x, b.pos.y + b.size.y * (1 - value) / 2);
-
-		// Draw line
-		nvgStrokeColor(args.args.vg, nvgRGBA(0xff, 0xff, 0xff, 0x10));
-		{
-			nvgBeginPath(args.args.vg);
-			nvgMoveTo(args.args.vg, p.x - 13, p.y);
-			nvgLineTo(args.args.vg, 0, p.y);
-			nvgClosePath(args.args.vg);
-		}
-		nvgStroke(args.args.vg);
-
-		// Draw indicator
-		nvgFillColor(args.args.vg, nvgRGBA(0xff, 0xff, 0xff, 0x60));
-		{
-			nvgBeginPath(args.args.vg);
-			nvgMoveTo(args.args.vg, p.x - 2, p.y - 4);
-			nvgLineTo(args.args.vg, p.x - 9, p.y - 4);
-			nvgLineTo(args.args.vg, p.x - 13, p.y);
-			nvgLineTo(args.args.vg, p.x - 9, p.y + 4);
-			nvgLineTo(args.args.vg, p.x - 2, p.y + 4);
-			nvgClosePath(args.args.vg);
-		}
-		nvgFill(args.args.vg);
-
-		nvgFontSize(args.args.vg, 8);
-		nvgFontFaceId(args.args.vg, font->handle);
-		nvgFillColor(args.args.vg, nvgRGBA(0x1e, 0x28, 0x2b, 0xff));
-		nvgText(args.args.vg, p.x - 8, p.y + 3, "T", NULL);
-		nvgResetScissor(args.args.vg);
-	}*/
-
 	void drawStats(const DrawArgs &args, Vec pos, const char *title, Stats *stats) {
 		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/DejaVuSansMono.ttf"));
 
@@ -465,17 +407,14 @@ struct SpeckDisplay : TransparentWidget {
 		// Y
 		if (module->inputs[Speck::INPUT_2].isConnected()) {
 			nvgStrokeColor(args.vg, nvgRGBA(0x0E, 0x99, 0x00, 0xA0));
-			//drawWaveform(args.args.vg, module->buffer2, gain2, pos2);
 			negOffs = drawWaveform(args, module->FFT2, gain2, pos2, zoom, freqOffs, module->linLog);
 		}
 
 		// X
 		if (module->inputs[Speck::INPUT_1].isConnected()) {
 			nvgStrokeColor(args.vg, nvgRGBA(0xF4, 0x51, 0x00, 0xA0));
-			//drawWaveform(args.args.vg, module->buffer1, gain1, pos1);
 			negOffs = drawWaveform(args, module->FFT1, gain1, pos1, zoom, freqOffs, module->linLog);
 		}
-		//drawTrig(args.args.vg, module->params[Speck::TRIG_PARAM], gain1, pos1);
 
 		// Calculate and draw stats
 		if (++frame >= 4) {
