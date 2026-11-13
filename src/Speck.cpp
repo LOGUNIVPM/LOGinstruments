@@ -188,9 +188,8 @@ struct SpeckDisplay : TransparentWidget {
 	std::shared_ptr<Font> font;
 
 	struct Stats {
-		float f0, peakx, peaky;
+		float peakx, peaky;
 		void calculate(float *values) {
-			f0 = 0.0;
 			peakx = 0.0;
 			peaky = 0.0;
 			for (int i = 0; i < FFT_POINTS_NYQ; i++) {
@@ -219,8 +218,25 @@ struct SpeckDisplay : TransparentWidget {
 			}
 #endif
 
+			// REFINE ESTIMATE BY PARABOLIC INTERPOLATION
+			if (peakx >= 1 && peakx < FFT_POINTS_NYQ-1) {
+				float l = values[(int)peakx-1];
+				float c = peaky;
+				float r = values[(int)peakx+1];
+				float denom = l - 2.f * c + r;
+				if (denom >= 0.f || fabs(denom) < 1e-15) {
+					// avoid divide by zero or non-concave parabola: revert to simple printing the peak bin
+					;
+				} else {
+					// refine with parabolic interpolation
+					float frac = 0.5f * (l - r) / denom; // fractional offset wrt center bin
+					peakx += frac;
+				}
+			} else {
+				// peakx is exactly 0 or Nyquist
+				;
+			}
 			peakx = 0.5f * APP->engine->getSampleRate() * ((float)(peakx) / (float)(FFT_POINTS_NYQ));
-			f0 = peakx; // assumption: the highest value is the actual f0, does not hold true: use Yin or other pitch estimation methods
 		}
 	};
 	Stats stats1, stats2;
