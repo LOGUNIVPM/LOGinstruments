@@ -3,7 +3,6 @@
 
 /*
  * FFT SCOPE, BASED ON SCOPE
- * Todo: precise f0 estimate
  */
 
 #define BUFFER_SIZE 2048
@@ -220,8 +219,8 @@ struct SpeckDisplay : TransparentWidget {
 			}
 #endif
 
-			peakx = 0.5f * APP->engine->getSampleRate()/2.0 * ((float)(peakx) / (float)(FFT_POINTS_NYQ));
-			f0 = peakx; // todo calculate the real f0
+			peakx = 0.5f * APP->engine->getSampleRate() * ((float)(peakx) / (float)(FFT_POINTS_NYQ));
+			f0 = peakx; // assumption: the highest value is the actual f0, does not hold true: use Yin or other pitch estimation methods
 		}
 	};
 	Stats stats1, stats2;
